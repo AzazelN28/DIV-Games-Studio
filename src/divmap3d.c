@@ -16,10 +16,16 @@
 #define EDITA_SECTOR  3
 #define PINTA_BANDERA 4
 
-#define ANCHO_VENTANA   240
-#define ALTO_VENTANA    160
-#define M_ANCHO_VENTANA 120
-#define M_ALTO_VENTANA   80
+#define ANCHO_REAL_VENTANA 709
+#define ALTO_REAL_VENTANA  520
+#define ANCHO_VENTANA      640 
+#define ALTO_VENTANA       480 
+#define M_ANCHO_VENTANA    320 
+#define M_ALTO_VENTANA     240 
+
+#define SELECTOR_FONDO_X  ANCHO_VENTANA - 39
+#define SELECTOR_FONDO_Y  ALTO_VENTANA + 14
+
 #define TOP_CLIP          1
 #define LEFT_CLIP         2
 #define BOTTOM_CLIP       4
@@ -31,6 +37,16 @@
 
 #define M3D_ANCHO_THUMB   96
 #define M3D_ALTO_THUMB    88
+
+#define DEFAULT_ZOOM_LEVEL 1
+#define MAX_ZOOM 8
+#define MIN_ZOOM 0.0625
+
+#define DEFAULT_GRID 1
+#define DEFAULT_SNAP 1
+
+#define DEFAULT_ALTURA_TECHO 1152
+#define DEFAULT_ALTURA_SUELO 1024
 
 #define incremento_maximo 65536
 #define max_int           65536
@@ -68,6 +84,8 @@ void M3D_muestra_thumb      (struct t_listboxbr * l, int num);
 void M3D_crear_listboxbr    (struct t_listboxbr * l);
 void M3D_actualiza_listboxbr(struct t_listboxbr * l);
 void M3D_pinta_listboxbr    (struct t_listboxbr * l);
+void M3D_set_flag           (int flag);
+
 void PintaVisorThumb        (void);
 void CrearMapperThumb       (int tex_cod, int an_thumb, int al_thumb);
 void PintaMapperThumbs      (void);
@@ -106,6 +124,7 @@ void map_asignregions();
 void map_boundingbox();
 void map_reduce(int ancho, int alto, char *buffer);
 
+
 //ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
 //  Prototipos externos
 //ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
@@ -130,15 +149,19 @@ int inside;
 
 M3D_info  m3d_edit;
 M3D_info *m3d;
+
+// Flags utilizados para indicar si se está
+// creando un sector, editando un vertice, una línea o un sector
+// o si se está editando una bandera.
 int       m3d_flags[5] = { 1, 0, 0, 0, 0 };
 int       tex_sop[11] = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
 
-int modo_edicion=PINTA_SECTOR;
+int modo_edicion = PINTA_SECTOR;
 int pos_x, pos_y;
 int scroll_x, scroll_y;
-int num_bandera=0;
-int MouseFocus=1;
-int VuelcaMapa;
+int num_bandera = 0;
+int MouseFocus = 1;
+int vuelca_mapa;
 
 byte FPG_pal[768];
 byte FPG_xlat[256];
@@ -178,6 +201,10 @@ struct _thumb_tex {
 
 extern int _omx, _omy, omx, omy, oclock, num, incremento;
 
+/**
+ * Estructura para los archivos FPG. ¿Esto no molaría más
+ * importarlo de un .h? ¿Por qué redefinirlo aquí?
+ */
 typedef struct {
   char magic1[3];
   char magic2[4];
@@ -212,6 +239,16 @@ struct {
   int total;
 } FPG_progress;
 
+/**
+ * Información de textura para el editor.
+ *
+ * ¿Por qué se definen cuatro?
+ *
+ * 1. Techo
+ * 2. Suelo
+ * 3. Parte frontal de una pared
+ * 4. Parte trasera de una pared
+ */
 struct {
   int   cod;
   int   an;
@@ -219,33 +256,50 @@ struct {
   byte *gra;
 } Tex[4];
 
+// Ni idea de para qué vale esto.
 int TipoTex;
 
 tmap *my_map;
-int old_but1,old_but2;
-float grid_size;
-int region_status=0; // Indica si se va a comenzar una nueva region
-int region_deleted=0;
-int first_point;
-int last_point=-1;
-float zoom_level;
-int grid=0,snap=0;
+int old_but1,
+    old_but2;
 
-int altura_techo=2048;
-int altura_suelo=1024;
+float grid_size;
+
+int region_status = 0; // Indica si se va a comenzar una nueva region
+int region_deleted = 0;
+
+// Puntos que estamos pintando.
+int first_point;
+int last_point = -1;
+
+// Nivel de zoom.
+float zoom_level = 1.0;
+
+// Activamos el GRID y el SNAP por defecto.
+int grid = DEFAULT_GRID, snap = DEFAULT_SNAP;
+
+// Estos valores por defecto para el editor de mapas 3D son muchísimo
+// más sensatos. Los antiguos valores eran:
+// altura_techo = 2048;
+// altura_suelo = 1024;
+int altura_techo = DEFAULT_ALTURA_TECHO;
+int altura_suelo = DEFAULT_ALTURA_SUELO;
 
 int fade_pared;
 int fade_sector;
 
-int edit_wall=-1;
-int edit_region=-1;
-int edit_point=-1;
-int edit_flag=-1;
+int edit_wall = -1;
+int edit_region = -1;
+int edit_point = -1;
+int edit_flag = -1;
 
 //ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
 //  Codigo principal del visor de mapas 3D
 //ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
 
+/**
+ * Crea un visor de mapas 3D.
+ */
 void MapperVisor0(void)
 {
   v.tipo   = 106;
@@ -266,6 +320,9 @@ void MapperVisor0(void)
   v_terminado=0;
 }
 
+/**
+ * Esta función dibuja el mini-mapa.
+ */
 void MapperVisor1(void)
 {
   _show_items();
@@ -273,26 +330,35 @@ void MapperVisor1(void)
   PintaVisorThumb();
 }
 
+/**
+ * Esta función gestiona lo que ocurre cuando se hace click
+ * sobre la ventana del visor de mapas. Es decir, esta función
+ * es la que se encarga de arrancar el creador de mapas.
+ */
 void MapperVisor2(void)
 {
   M3D_info *m3d_aux=(M3D_info*)v.aux;
   int n;
 
-  my_map=&m3d_aux->map;
+  my_map = &m3d_aux->map;
 
   _process_items();
 
-  if(mouse_b)
+  if (mouse_b)
   {
 //    if(wmouse_in(4, 12, v.an-4, v.al-4))
 //    {
       memcpy(&m3d_edit ,m3d_aux, sizeof(M3D_info)-sizeof(tmap));
-      for(n=0; n<max_texturas; n++) thumb_tex[n].ptr=NULL;
-      for(n=0; n<4; n++)
+      for(n = 0; n < max_texturas; n++) {
+        thumb_tex[n].ptr = NULL;
+      }
+
+      for(n = 0; n < 4; n++)
       {
         Tex[n].gra=NULL;
         Tex[n].cod=0;
       }
+
       M3D_crear_thumbs(&ltexturasbr,1);
       Tex[FONDO].cod=my_map->fondo;
       if(Tex[FONDO].cod)
@@ -300,7 +366,9 @@ void MapperVisor2(void)
         TipoTex=FONDO;
         CrearMapperThumb(Tex[FONDO].cod, 42, 21);
       }
+
       dialogo(MapperCreator0);
+
       my_map->fondo=Tex[FONDO].cod;
       memcpy(m3d_aux ,&m3d_edit, sizeof(M3D_info)-sizeof(tmap));
       call(v.paint_handler);
@@ -309,6 +377,9 @@ void MapperVisor2(void)
   }
 }
 
+/**
+ * Esta función es llamada cuando se destruye el visor de mapas.
+ */
 void MapperVisor3(void)
 {
   int i;
@@ -316,19 +387,26 @@ void MapperVisor3(void)
 
   lptmap my_map_aux=&m3d_aux->map;
 
-  for (i=0;i<my_map_aux->num_points;i++)
+  for (i = 0; i < my_map_aux->num_points; i++) {
     free(my_map_aux->points[i]);
-  for (i=0;i<my_map_aux->num_walls;i++)
+  }
+  
+  for (i = 0; i < my_map_aux->num_walls; i++) {
     free(my_map_aux->walls[i]);
-  for (i=0;i<my_map_aux->num_regions;i++)
+  }
+  
+  for (i = 0; i < my_map_aux->num_regions; i++) {
     free(my_map_aux->regions[i]);
-  for (i=0;i<my_map_aux->num_flags;i++)
-    free(my_map_aux->flags[i]);
+  }
 
-  my_map_aux->num_points=0;
-  my_map_aux->num_walls=0;
-  my_map_aux->num_regions=0;
-  my_map_aux->num_flags=0;
+  for (i = 0; i < my_map_aux->num_flags; i++) {
+    free(my_map_aux->flags[i]);
+  }
+
+  my_map_aux->num_points = 0;
+  my_map_aux->num_walls = 0;
+  my_map_aux->num_regions = 0;
+  my_map_aux->num_flags = 0;
 
   free(v.aux);
 }
@@ -342,63 +420,82 @@ void MapperCreator0(void)
   v.tipo       = 1;
   v.titulo     = texto[442];
   v.nombre     = texto[442];
-  v.an         = 309;
-  v.al         = 200;
+  v.an         = ANCHO_REAL_VENTANA;
+  v.al         = ALTO_REAL_VENTANA;
 
-  fade_pared=0;
-  fade_sector=0;
-  VuelcaMapa=1;
+  fade_pared = 0;
+  fade_sector = 0;
+  vuelca_mapa = 1;
 
-  v.paint_handler=MapperCreator1;
-  v.click_handler=MapperCreator2;
-  v.close_handler=MapperCreator3;
+  v.paint_handler = MapperCreator1;
+  v.click_handler = MapperCreator2;
+  v.close_handler = MapperCreator3;
 
-  // Modo Edicion
-  _flag(443, 4, 174, &m3d_flags[0]);
+  // Modo Edición
+  _flag(443, 4, v.al - 26, &m3d_flags[0]);
 
   // Modo Vertice, Linea o Sector
-  _flag(444, 50, 174, &m3d_flags[1]);
-  _flag(445, 50, 182, &m3d_flags[2]);
-  _flag(446, 50, 190, &m3d_flags[3]);
+  _flag(444, 50, v.al - 26, &m3d_flags[1]);
+  _flag(445, 50, v.al - 18, &m3d_flags[2]);
+  _flag(446, 50, v.al - 10, &m3d_flags[3]);
 
   // Modo Banderas
   sprintf(cadenas[2],"%d",num_bandera);
-  _flag(447, 101, 174, &m3d_flags[4]);
-  _get(414, 114, 177, 24, (byte *)cadenas[2], 4, 0, 999);
-  _button(111, 104, 186, 0);
-  _button(110, 144, 186, 0);
+  _flag(447, 101, v.al - 26, &m3d_flags[4]);
+  _get(414, 114, v.al - 23, 24, (byte *)cadenas[2], 4, 0, 999);
+  _button(111, 104, v.al - 14, 0);
+  _button(110, 144, v.al - 14, 0);
 
   // Altura de Techo y Suelo
-  _get(414, ANCHO_VENTANA+7,    11+100+2-8+1, 48, (byte *)cadenas[3], 5, 0, 4095);
-  _get(414, ANCHO_VENTANA+7, 11+150+3+11-8+2, 48, (byte *)cadenas[4], 5, 0, 4095);
+  sprintf(cadenas[3],"%d",altura_techo);
+  sprintf(cadenas[4],"%d",altura_suelo);
+  _get(414, ANCHO_VENTANA+7, 106, 48, (byte *)cadenas[3], 5, 0, 4095);
+  _get(414, ANCHO_VENTANA+7, 169, 48, (byte *)cadenas[4], 5, 0, 4095);
 
   // Modos Grid y Snap
-  _flag(458, 155, 174, &grid);
-  _flag(459, 155, 182, &snap);
+  _flag(458, 155, v.al - 26, &grid);
+  _flag(459, 155, v.al - 18, &snap);
 
-  modo_edicion=PINTA_SECTOR;
+  modo_edicion = PINTA_SECTOR;
+
   memset(m3d_flags, 0, sizeof(m3d_flags));
-  m3d_flags[modo_edicion]=1;
 
-  zoom_level=0.0625;
+  // seteamos la bandera correspondiente a 1.
+  // ¿Esto no es un poco una redundancia? Ya se setea a 1 en
+  // la definición.
+  m3d_flags[modo_edicion] = 1;
+
+  // ¿Esto establece el zoom por defecto?
+  zoom_level = DEFAULT_ZOOM_LEVEL;
+
+  // Obtenemos el bounding box. Esto funciona bastante como el orto.
   map_boundingbox();
-  if (my_map->bbox_x_ini==65536) {
-    scroll_x=FIN_GRID/2;
-    scroll_y=FIN_GRID/2;
+  if (my_map->bbox_x_ini == 65536) 
+  {
+    scroll_x = FIN_GRID / 2;
+    scroll_y = FIN_GRID / 2;
   }
-  else {
-    scroll_x=(my_map->bbox_x_ini+my_map->bbox_x_fin)/2;
-    scroll_y=(my_map->bbox_y_ini+my_map->bbox_y_fin)/2;
+  else 
+  {
+    scroll_x = (my_map->bbox_x_ini + my_map->bbox_x_fin) / 2;
+    scroll_y = (my_map->bbox_y_ini + my_map->bbox_y_fin) / 2;
   }
-  scroll_x&=-64;
-  scroll_y&=-64;
 
-  v_terminado=0;
+  // WHAT?
+  scroll_x &= -64;
+  scroll_y &= -64;
+
+  v_terminado = 0;
 }
 
+/**
+ * Esta función es la encargada de dibujar el editor de mapas.
+ */
 void MapperCreator1(void)
 {
-  int an=v.an/big2,al=v.al/big2;
+  int an=v.an / big2,
+      al=v.al / big2;
+
   int alto;
 
   v.item[8].tipo=2;
@@ -417,6 +514,7 @@ void MapperCreator1(void)
 
   actualiza_listbox(&lpared);
   actualiza_listbox(&lsector);
+
 /*
   if(modo_edicion==EDITA_LINEA)
   {
@@ -427,6 +525,7 @@ void MapperCreator1(void)
     actualiza_listbox(&lsector);
   }
 */
+
   // Zona de edicion
   wrectangulo(v.ptr, an, al, c0, 3, 11, ANCHO_VENTANA+2, ALTO_VENTANA+2);
 //  wbox       (v.ptr, an, al, c1, 4, 12,   ANCHO_VENTANA,   ALTO_VENTANA);
@@ -438,34 +537,42 @@ void MapperCreator1(void)
   wbox       (v.ptr, an, al, c1, ANCHO_VENTANA+7,     12+50+1, 48, 48);
   wrectangulo(v.ptr, an, al, c0, ANCHO_VENTANA+6, 11+100+2+12, 50, 50);
   wbox       (v.ptr, an, al, c1, ANCHO_VENTANA+7, 12+100+2+12, 48, 48);
+
+  // Pintamos los thumbnails de las texturas.
   PintaMapperThumbs();
 
   // Barra de alturas
   wbox(v.ptr, an, al, c_b_low, ANCHO_VENTANA+7+50, 11+100+3, 9, 72);
-  alto = (altura_techo*72)/(TOPE_TECHO-1) - (altura_suelo*72)/(TOPE_TECHO-1);
-  if(alto<1)
+  alto = (altura_techo * 72) / (TOPE_TECHO-1) - (altura_suelo*72)/(TOPE_TECHO-1);
+  if (alto < 1) 
   {
-    alto=1;
-    if(((altura_techo*72)/(TOPE_TECHO-1))<1)
+    alto = 1;
+    if(((altura_techo * 72) / (TOPE_TECHO-1))<1)
     {
       wbox(v.ptr, an, al, c4, ANCHO_VENTANA+7+50, 11+100+3+71-(altura_techo*72)/(TOPE_TECHO-1), 9, alto);
     }
-    else
+    else 
+    {
       wbox(v.ptr, an, al, c4, ANCHO_VENTANA+7+50, 11+100+3+72-(altura_techo*72)/(TOPE_TECHO-1), 9, alto);
-  }
-  else
+    }
+  } 
+  else 
+  {
     wbox(v.ptr, an, al, c4, ANCHO_VENTANA+7+50, 11+100+3+72-(altura_techo*72)/(TOPE_TECHO-1), 9, alto);
+  }
   wrectangulo(v.ptr, an, al, c0, ANCHO_VENTANA+7+50, 11+100+2, 9, 74);
 
   // Seleccion de fondo
-  wrectangulo(v.ptr, an, al, c0, 201, 174, 44, 23);
-  wbox       (v.ptr, an, al, c1, 202, 175, 42, 21);
+  wrectangulo(v.ptr, an, al, c0, SELECTOR_FONDO_X, SELECTOR_FONDO_Y, 44, 23);
+  wbox       (v.ptr, an, al, c1, SELECTOR_FONDO_X + 1, SELECTOR_FONDO_Y + 1, 42, 21);
 
+  // Pinta el fondo.
   PintaFondoThumb();
+
   mostrar_coordenadas();
-  if(VuelcaMapa)
+  if (vuelca_mapa)
   {
-    VuelcaMapa=0;
+    vuelca_mapa=0;
     map_draw();
   }
 }
@@ -473,19 +580,24 @@ void MapperCreator1(void)
 extern int last_x, last_y;
 extern int leer_mouse;
 
+// Esta es la función que se llama cuando se hace click????
 void MapperCreator2(void)
 {
-  int an=v.an/big2,al=v.al/big2;
-  int need_refresh=0;
-  int inc,aux,dif_x,dif_y;
+  int an = v.an / big2,
+      al = v.al / big2;
+  int need_refresh = 0;
+  int inc, aux, dif_x, dif_y;
 
   _process_items();
 
   v_pausa=1;
-  if(modo_edicion==PINTA_SECTOR || modo_edicion==EDITA_LINEA)
+  if (modo_edicion == PINTA_SECTOR || modo_edicion == EDITA_LINEA) {
     actualiza_listbox(&lpared);
-  if(modo_edicion==PINTA_SECTOR || modo_edicion==EDITA_SECTOR)
+  }
+
+  if (modo_edicion == PINTA_SECTOR || modo_edicion == EDITA_SECTOR) {
     actualiza_listbox(&lsector);
+  }
 /*
   if(modo_edicion==EDITA_LINEA)
   {
@@ -501,54 +613,57 @@ void MapperCreator2(void)
   switch(v.active_item)
   {
     case 0: // Flag de Edicion
-      modo_edicion=PINTA_SECTOR;
-      memset(m3d_flags, 0, sizeof(m3d_flags));
-      m3d_flags[modo_edicion]=1;
+      M3D_set_flag(PINTA_SECTOR);
       need_refresh=1;
       map_off();
       break;
+
     case 1: // Flag de Vertice
-      modo_edicion=EDITA_VERTICE;
-      memset(m3d_flags, 0, sizeof(m3d_flags));
-      m3d_flags[modo_edicion]=1;
+      M3D_set_flag(EDITA_VERTICE);
       need_refresh=1;
       map_off();
       break;
+
     case 2: // Flag de Linea
-      modo_edicion=EDITA_LINEA;
-      memset(m3d_flags, 0, sizeof(m3d_flags));
-      m3d_flags[modo_edicion]=1;
+      M3D_set_flag(EDITA_LINEA);
       need_refresh=1;
       map_off();
       break;
+
     case 3: // Flag de Sector
-      modo_edicion=EDITA_SECTOR;
-      memset(m3d_flags, 0, sizeof(m3d_flags));
-      m3d_flags[modo_edicion]=1;
-      need_refresh=1;
+      M3D_set_flag(EDITA_SECTOR);
+      need_refresh = 1;
+      // ¿Por qué reordena los sectores?
       map_sortregions(1);
       map_off();
       break;
+
     case 4: // Flag de Bandera
-      modo_edicion=PINTA_BANDERA;
-      memset(m3d_flags, 0, sizeof(m3d_flags));
-      m3d_flags[modo_edicion]=1;
+      M3D_set_flag(PINTA_BANDERA);
       need_refresh=1;
       map_off();
       break;
+
     case 5: // Get de Bandera
       num_bandera=atoi(cadenas[2]);
       break;
+
     case 6: // Boton de Bandera anterior
-      if(num_bandera>  0) num_bandera--;
+      if (num_bandera > 0) {
+        num_bandera--;
+      }
       itoa(num_bandera, cadenas[2], 10);
       need_refresh=1;
       break;
+
     case 7: // Boton de Bandera siguiente
-      if(num_bandera<999) num_bandera++;
+      if (num_bandera < 999) {
+        num_bandera++;
+      }
       itoa(num_bandera, cadenas[2], 10);
       need_refresh=1;
       break;
+      
     case 8: // Get de Altura de Techo
       altura_techo = atoi(cadenas[3]);
       if(altura_suelo > altura_techo)
@@ -563,6 +678,7 @@ void MapperCreator2(void)
       }
       need_refresh=1;
       break;
+      
     case 9: // Get de Altura de Suelo
       altura_suelo = atoi(cadenas[4]);
       if(altura_techo < altura_suelo)
@@ -577,44 +693,54 @@ void MapperCreator2(void)
       }
       need_refresh=1;
       break;
+
     case 10: // Flag de Grid
-      if(!grid) snap=0;
-      need_refresh=1;
+      if (!grid) {
+        snap = 0;
+      }
+      need_refresh = 1;
       break;
+
     case 11: // Flag de Snap
-      if(!grid)
+      if (!grid)
       {
-        grid=1;
-        snap=1;
+        grid = 1;
+        snap = 1;
         need_refresh=1;
       }
       break;
   }
 
   // Control de listbox de iluminacion
-  if(!(mouse_b&1) && (old_mouse_b&1))
+  if(!(mouse_b & 1) && (old_mouse_b & 1))
   {
-    if(lpared.zona==2 || lpared.zona==3 || lpared.zona==4)
+    if (lpared.zona == 2 || lpared.zona == 3 || lpared.zona == 4)
     {
-      if(modo_edicion==PINTA_SECTOR || modo_edicion==EDITA_LINEA)
+      if(modo_edicion == PINTA_SECTOR || modo_edicion == EDITA_LINEA)
       {
-        fade_pared=lpared.inicial;
+        fade_pared = lpared.inicial;
 //      sprintf(cadenas[3], "%d", fade_pared);
-        if(edit_wall != -1) my_map->walls[edit_wall]->fade = fade_pared;
+        if (edit_wall != -1) {
+          my_map->walls[edit_wall]->fade = fade_pared;
+        }
         need_refresh=1;
       }
     }
-    if(lsector.zona==2 || lsector.zona==3 || lsector.zona==4)
+
+    if (lsector.zona == 2 || lsector.zona == 3 || lsector.zona == 4)
     {
-      if(modo_edicion==PINTA_SECTOR || modo_edicion==EDITA_SECTOR)
+      if(modo_edicion == PINTA_SECTOR || modo_edicion == EDITA_SECTOR)
       {
         fade_sector=lsector.inicial;
 //      sprintf(cadenas[4], "%d", fade_sector);
-        if(edit_region != -1) my_map->regions[edit_region]->fade = fade_sector;
+        if (edit_region != -1) {
+          my_map->regions[edit_region]->fade = fade_sector;
+        }
         need_refresh=1;
       }
     }
   }
+
 /*
   if( lpared.zona==2 || lpared.zona==3 || lpared.zona==4 ||
       lsector.zona==2 || lsector.zona==3 || lsector.zona==4 )
@@ -622,55 +748,65 @@ void MapperCreator2(void)
     need_refresh=1;
   }
 */
+  
   // Edicion del mapa
   if(wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA))
   {
-    mouse_graf=233;
+    mouse_graf = 233;
 
-    dif_x=pos_x=mouse_x - v.x -  4*big2;
-    dif_y=pos_y=mouse_y - v.y - 12*big2;
+    dif_x = pos_x = mouse_x - v.x -  4*big2;
+    dif_y = pos_y = mouse_y - v.y - 12*big2;
 
     //-------------------------------------------------------------------------
     // Coordenadas de pantalla aplicando el zoom
     //-------------------------------------------------------------------------
-    pos_x=pos_x/zoom_level+M_ANCHO_VENTANA*big2-M_ANCHO_VENTANA*big2/zoom_level;
-    pos_y=pos_y/zoom_level+M_ALTO_VENTANA*big2-M_ALTO_VENTANA*big2/zoom_level;
+    pos_x = pos_x / zoom_level + M_ANCHO_VENTANA * big2 - M_ANCHO_VENTANA * big2 / zoom_level;
+    pos_y = pos_y / zoom_level + M_ALTO_VENTANA * big2 - M_ALTO_VENTANA * big2 / zoom_level;
 
     //-------------------------------------------------------------------------
     //  Coordenadas de pantalla aplicando el Snap
     //-------------------------------------------------------------------------
     if (snap) {
-      if (zoom_level<0.1)
+      if (zoom_level < 0.1) {
         inc=64;
-      else if (zoom_level<0.5)
+      } else if (zoom_level < 0.5) {
         inc=32;
-      else if (zoom_level<2.0)
+      } else if (zoom_level < 2.0) {
         inc=16;
-      else
+      } else {
         inc=8;
+      }
 
-      aux=(pos_x+scroll_x)%inc;
-      pos_x-=aux;
-      if (aux>(inc/2))
-        pos_x+=inc;
+      aux = (pos_x + scroll_x) % inc;
+      pos_x -= aux;
+      if (aux > (inc / 2)) {
+        pos_x += inc;
+      }
 
-      aux=(pos_y+scroll_y)%inc;
-      pos_y-=aux;
-      if (aux>(inc/2))
-        pos_y+=inc;
+      aux = (pos_y + scroll_y) % inc;
+      pos_y -= aux;
+      if (aux > (inc / 2)) {
+        pos_y += inc;
+      }
     }
-    else {
-      if (zoom_level>2.0) {
-        dif_x=2*dif_x/zoom_level+2*M_ANCHO_VENTANA*big2-2*M_ANCHO_VENTANA*big2/zoom_level;
-        if (dif_x&1)
+    else 
+    {
+      if (zoom_level > 2.0) {
+        dif_x= 2 * dif_x / zoom_level + 2 * M_ANCHO_VENTANA * big2 - 2 * M_ANCHO_VENTANA * big2 / zoom_level;
+        // ¿Par?
+        if (dif_x & 1) {
           pos_x++;
+        }
 
-        dif_y=2*dif_y/zoom_level+2*M_ALTO_VENTANA*big2-2*M_ALTO_VENTANA*big2/zoom_level;
-        if (dif_y&1)
+        dif_y = 2 * dif_y / zoom_level + 2 * M_ALTO_VENTANA * big2 - 2 * M_ALTO_VENTANA * big2 / zoom_level;
+        // ¿Par?
+        if (dif_y & 1) {
           pos_y++;
+        }
       }
     }
 
+    // 
     switch(modo_edicion)
     {
       case PINTA_SECTOR:  map_addpoint();   break;
@@ -686,6 +822,7 @@ void MapperCreator2(void)
       {
         case PINTA_SECTOR:  break;
         case EDITA_VERTICE: break;
+
         case EDITA_LINEA:
           if(edit_wall != -1)
           {
@@ -693,8 +830,9 @@ void MapperCreator2(void)
             need_refresh=1;
           }
           break;
+
         case EDITA_SECTOR:
-          if(edit_region != -1)
+          if (edit_region != -1)
           {
             fade_sector  = my_map->regions[edit_region]->fade;
             altura_techo = my_map->regions[edit_region]->ceil_height;
@@ -709,15 +847,22 @@ void MapperCreator2(void)
   }
   else
   {
-    if(mouse_b && edit_point==-1 && edit_wall==-1 && edit_region==-1)
+    // What?
+    if (mouse_b && edit_point == -1 && edit_wall == -1 && edit_region == -1) {
       map_deletenullregion();
+    }
   }
 
+  /**
+   * Aquí detectamos si se ha pulsado sobre alguno de los selectores
+   * de textura/fondo.
+   */
   if(mouse_b&1)
   {
     if(modo_edicion==EDITA_LINEA || modo_edicion==PINTA_SECTOR)
-    {
-      if(wmouse_in(ANCHO_VENTANA+6,          11, 50, 50)) // Textura de Pared
+    { 
+      // Textura de Pared
+      if(wmouse_in(ANCHO_VENTANA+6,          11, 50, 50))
       {
         if(m3d_edit.fpg_path[0]==0)
         {
@@ -737,9 +882,11 @@ void MapperCreator2(void)
         }
       }
     }
+
     if(modo_edicion==EDITA_SECTOR || modo_edicion==PINTA_SECTOR)
-    {
-      if(wmouse_in(ANCHO_VENTANA+6,     11+50+1, 50, 50)) // Textura de Techo
+    { 
+      // Textura de Techo
+      if(wmouse_in(ANCHO_VENTANA+6,     11+50+1, 50, 50))
       {
         if(m3d_edit.fpg_path[0]==0)
         {
@@ -758,8 +905,8 @@ void MapperCreator2(void)
           need_refresh=1;
         }
       }
-      else
-      if(wmouse_in(ANCHO_VENTANA+6, 11+100+2+12, 50, 50)) // Textura de Suelo
+      // Textura de Suelo
+      else if(wmouse_in(ANCHO_VENTANA+6, 11+100+2+12, 50, 50))
       {
         if(m3d_edit.fpg_path[0]==0)
         {
@@ -779,7 +926,8 @@ void MapperCreator2(void)
         }
       }
     }
-    if(wmouse_in(201, 174, 44, 23)) // Fondo
+
+    if(wmouse_in(SELECTOR_FONDO_X, SELECTOR_FONDO_Y, 44, 23)) // Fondo
     {
       if(m3d_edit.fpg_path[0]==0)
       {
@@ -790,6 +938,7 @@ void MapperCreator2(void)
           M3D_crear_thumbs(&ltexturasbr,1);
         }
       }
+
       if(m3d_edit.fpg_path[0]!=0)
       {
         TipoTex = FONDO;
@@ -797,6 +946,7 @@ void MapperCreator2(void)
         need_refresh=1;
       }
     }
+
     if(wmouse_in(an-63, al-12, 60, 9)) // Seleccion de FPG
     {
       if(comprobar_fichero())
@@ -809,30 +959,44 @@ void MapperCreator2(void)
     }
   }
 
+  /**
+   * Atajos de teclado del editor de mapas 3D.
+   */
   switch(scan_code)
   {
+    // Zoom In
     case _Z:
-    case _F1: zoom_level*=2.0;
-      if (zoom_level>8) zoom_level=8;
+    case _F1: 
+      zoom_level *= 2.0;
+      if (zoom_level > MAX_ZOOM) {
+        zoom_level = MAX_ZOOM;
+      }
       map_draw();
       break;
 
+    // Zoom Out
     case _X:
-    case _F2: zoom_level/=2.0;
-      if (zoom_level<0.0625) zoom_level*=2.0;
+    case _F2: 
+      zoom_level *= 0.5;
+      if (zoom_level < MIN_ZOOM) {
+        zoom_level = MIN_ZOOM;
+      }
       map_draw();
       break;
 
+    // ¿Qué coño hace esto?
     case _F10:
     case _C:
       map_boundingbox();
-      if (my_map->bbox_x_ini==65536) {
-        scroll_x=FIN_GRID/2;
-        scroll_y=FIN_GRID/2;
+      if (my_map->bbox_x_ini == 65536) 
+      {
+        scroll_x = FIN_GRID/2;
+        scroll_y = FIN_GRID/2;
       }
-      else {
-        scroll_x=(my_map->bbox_x_ini+my_map->bbox_x_fin)/2;
-        scroll_y=(my_map->bbox_y_ini+my_map->bbox_y_fin)/2;
+      else 
+      {
+        scroll_x = (my_map->bbox_x_ini+my_map->bbox_x_fin)/2;
+        scroll_y = (my_map->bbox_y_ini+my_map->bbox_y_fin)/2;
       }
       scroll_x&=-64;
       scroll_y&=-64;
@@ -840,7 +1004,7 @@ void MapperCreator2(void)
       break;
   }
 
-  grid_size=(4*big2)/zoom_level;
+  grid_size = (4*big2) / zoom_level;
 
   // Scroll del mapa
   if (!(v.item[5].estado&2) && !(v.item[8].estado&2) && !(v.item[9].estado&2)) {
@@ -922,7 +1086,10 @@ void MapperCreator2(void)
     map_draw();
     v.volcar=1;
   }
-  else if(!v.volcar) v.volcar=2;
+  else if(!v.volcar) 
+  {
+    v.volcar=2;
+  }
 }
 
 void MapperCreator3(void)
@@ -1487,6 +1654,18 @@ void M3D_crear_listboxbr(struct t_listboxbr * l)
   pinta_sliderbr(l);
 }
 
+/**
+ * Establece el flag que corresponda.
+ */
+void M3D_set_flag(int flag) {
+  // pone el modo de edición igual al flag.
+  modo_edicion = flag;
+  // resetea todos los flags.
+  memset(m3d_flags, 0, sizeof(m3d_flags));
+  // establece el flag que corresponda a 1.
+  m3d_flags[modo_edicion] = 1;
+}
+
 void M3D_actualiza_listboxbr(struct t_listboxbr * l)
 {
   byte * ptr=v.ptr, *p;
@@ -1822,6 +2001,7 @@ void PintaMapperThumbs(void)
       }
       break;
   }
+
   for(y=0; y<al; y++)
   {
     for(x=0; x<an; x++)
@@ -1879,22 +2059,28 @@ void nuevo_mapa3d(void)
 
   scroll_x=FIN_GRID/2;
   scroll_y=FIN_GRID/2;
+  
+  // resetea el nivel de zoom.
   zoom_level=0.0625;
 }
 
+/**
+ * Esta función renderiza las coordenadas.
+ */
 void mostrar_coordenadas(void)
 {
-  int an=v.an/big2,al=v.al/big2;
+  int an = v.an / big2,
+      al = v.al / big2;
   int x0,y0;
   int new_scroll_x,new_scroll_y;
   char distance[32];
 
   wbox(v.ptr, an, al, c2, an-154, al-11, 45, 8);
 
-  new_scroll_x=scroll_x+M_ANCHO_VENTANA*big2-M_ANCHO_VENTANA*big2/zoom_level;
-  new_scroll_y=scroll_y+M_ALTO_VENTANA*big2-M_ALTO_VENTANA*big2/zoom_level;
+  new_scroll_x = scroll_x+M_ANCHO_VENTANA*big2-M_ANCHO_VENTANA*big2/zoom_level;
+  new_scroll_y = scroll_y+M_ALTO_VENTANA*big2-M_ALTO_VENTANA*big2/zoom_level;
 
-  if(wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA)) {
+  if (wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA)) {
     if (region_status) { // Coordenadas relativas
       x0=abs(my_map->points[last_point]->x-pos_x-scroll_x);
       y0=abs(my_map->points[last_point]->y-pos_y-scroll_y);
@@ -1902,8 +2088,10 @@ void mostrar_coordenadas(void)
       sprintf(cadenas[1],"%04d",y0);
 
       sprintf(distance,"D: %04d",(int)sqrt(x0*x0+y0*y0));
+
       wwrite_in_box(v.ptr,an,an-4,al,an-152,al-10,0,(byte *)distance,c12);
       wwrite_in_box(v.ptr,an,an-4,al,an-153,al-10,0,(byte *)distance,c3);
+
       map_draw();
     }
     else { // Coordenadas absolutas
@@ -1915,11 +2103,12 @@ void mostrar_coordenadas(void)
     strcpy(cadenas[1],"????");
   }
 
-  wbox(v.ptr, an, al, c12, 3, 182, 39, 15);
-  wwrite(v.ptr, an, al,  4, 183, 0,       (byte *)"X:", c3);
-  wwrite(v.ptr, an, al,  4, 190, 0,       (byte *)"Y:", c3);
-  wwrite(v.ptr, an, al, 40, 183, 2, (byte *)cadenas[0], c3);
-  wwrite(v.ptr, an, al, 40, 190, 2, (byte *)cadenas[1], c3);
+  // Esto dibuja las coordenadas en las que nos encontramos.
+  wbox(v.ptr, an, al, c12, 3, al-18, 39, 15);
+  wwrite(v.ptr, an, al,  4, al-17, 0,       (byte *)"X:", c3);
+  wwrite(v.ptr, an, al,  4, al-10, 0,       (byte *)"Y:", c3);
+  wwrite(v.ptr, an, al, 40, al-17, 2, (byte *)cadenas[0], c3);
+  wwrite(v.ptr, an, al, 40, al-10, 2, (byte *)cadenas[1], c3);
 
   // FPG en uso
   wbox(v.ptr, an, al, c12, an-63, al-11, 60, 8);
@@ -1968,44 +2157,46 @@ void draw_line(int x0, int y0, int x1, int y1, byte color)
 {
   int test0,test1;
   int resultado,aux;
-  int clipping_min_x=0;
-  int clipping_min_y=0;
-  int clipping_max_x=ANCHO_VENTANA-1;
-  int clipping_max_y=ALTO_VENTANA-1;
+  int clipping_min_x = 0;
+  int clipping_min_y = 0;
+  int clipping_max_x = ANCHO_VENTANA-1;
+  int clipping_max_y = ALTO_VENTANA-1;
 
   //---------------------------------------------------------------------------
   //  Control inicial de orden
   //---------------------------------------------------------------------------
-  if (x1<x0) {
-    aux=x0; x0=x1; x1=aux;
-    aux=y0; y0=y1; y1=aux;
+  if (x1 < x0) {
+    aux = x0; x0 = x1; x1 = aux;
+    aux = y0; y0 = y1; y1 = aux;
   }
 
   //---------------------------------------------------------------------------
   //  Test de clipping Sutherland-Cohen
   //---------------------------------------------------------------------------
-  test0=0;
-  test1=0;
-  if (x0<clipping_min_x) test0=LEFT_CLIP;
-  else if (x0>clipping_max_x) test0=RIGHT_CLIP;
-  if (y0<clipping_min_y) test0+=TOP_CLIP;
-  else if (y0>clipping_max_y) test0+=BOTTOM_CLIP;
+  test0 = 0;
+  test1 = 0;
 
-  if (x1<clipping_min_x) test1=LEFT_CLIP;
-  else if (x1>clipping_max_x) test1=RIGHT_CLIP;
-  if (y1<clipping_min_y) test1+=TOP_CLIP;
-  else if (y1>clipping_max_y) test1+=BOTTOM_CLIP;
+  if (x0 < clipping_min_x) test0=LEFT_CLIP;
+  else if (x0 > clipping_max_x) test0=RIGHT_CLIP;
+  if (y0 < clipping_min_y) test0+=TOP_CLIP;
+  else if (y0 > clipping_max_y) test0+=BOTTOM_CLIP;
+
+  if (x1 < clipping_min_x) test1=LEFT_CLIP;
+  else if (x1 > clipping_max_x) test1=RIGHT_CLIP;
+  if (y1 < clipping_min_y) test1+=TOP_CLIP;
+  else if (y1 > clipping_max_y) test1+=BOTTOM_CLIP;
 
   //---------------------------------------------------------------------------
   //  Linea fuera de pantalla
   //---------------------------------------------------------------------------
-  if (test0&test1)
+  if (test0 & test1) {
     return;
+  }
 
   //---------------------------------------------------------------------------
   //  Clipping parcial
   //---------------------------------------------------------------------------
-  resultado=test0|test1;
+  resultado = test0 | test1;
   while (resultado) {
     // Clipping derecha
     if (resultado&RIGHT_CLIP) {
@@ -2051,30 +2242,33 @@ void draw_line(int x0, int y0, int x1, int y1, byte color)
         y1=clipping_min_y;
       }
     }
+
     //---------------------------------------------------------------------------
     //  Test de clipping Sutherland-Cohen
     //---------------------------------------------------------------------------
-    test0=0;
-    test1=0;
-    if (x0<clipping_min_x) test0=LEFT_CLIP;
-    else if (x0>clipping_max_x) test0=RIGHT_CLIP;
-    if (y0<clipping_min_y) test0+=TOP_CLIP;
-    else if (y0>clipping_max_y) test0+=BOTTOM_CLIP;
+    test0 = 0;
+    test1 = 0;
 
-    if (x1<clipping_min_x) test1=LEFT_CLIP;
-    else if (x1>clipping_max_x) test1=RIGHT_CLIP;
-    if (y1<clipping_min_y) test1+=TOP_CLIP;
-    else if (y1>clipping_max_y) test1+=BOTTOM_CLIP;
+    if (x0 < clipping_min_x) test0=LEFT_CLIP;
+    else if (x0 > clipping_max_x) test0=RIGHT_CLIP;
+    if (y0 < clipping_min_y) test0+=TOP_CLIP;
+    else if (y0 > clipping_max_y) test0+=BOTTOM_CLIP;
 
-    resultado=test0|test1;
+    if (x1 < clipping_min_x) test1=LEFT_CLIP;
+    else if (x1 > clipping_max_x) test1=RIGHT_CLIP;
+    if (y1 < clipping_min_y) test1+=TOP_CLIP;
+    else if (y1 > clipping_max_y) test1+=BOTTOM_CLIP;
 
-    if (test0&test1)
+    resultado = test0 | test1;
+
+    if (test0 & test1) {
       return;
+    }
   }
 
 
-  wline((char *)v.ptr+v.an*12*big2+4*big2, v.an, ANCHO_VENTANA*big2, ALTO_VENTANA*big2,
-    x0*big2, y0*big2, x1*big2, y1*big2, color);
+  wline((char *)v.ptr + v.an * 12 * big2 + 4 * big2, v.an, ANCHO_VENTANA * big2, ALTO_VENTANA * big2,
+    x0 * big2, y0 * big2, x1 * big2, y1 * big2, color);
 }
 
 //ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
@@ -2084,97 +2278,168 @@ void draw_line(int x0, int y0, int x1, int y1, byte color)
 void map_addpoint()
 {
   int i;
-  int new_point,new_wall,new_region;
-  int p1,p2,p3;
-  int x1,y1,x2,y2;
+  int new_point, new_wall, new_region;
+  int p1, p2, p3;
+  int x1, y1, x2, y2;
   static int first_wall;
   static int angulo_provisional;
 
-  if (mouse_b&1 && old_but1==0) {
-    old_but1=1;
+  // Si se ha presionado el botón izquierdo del ratón.
+  if (mouse_b & 1 && old_but1 == 0) {
+
+    // ¿?
+    old_but1 = 1;
+
     //-------------------------------------------------------------------------
     //  A¤ade un punto a la lista
     //-------------------------------------------------------------------------
-    if ((new_point=map_findpoint(pos_x,pos_y,-1))<0) {
-      if (new_point==-2)
+    // Buscamos un nuevo punto en la lista de puntos del mapa,
+    // si map_findpoint retorna < 0 significa que no hemos encontrado
+    // un nuevo punto y que por lo tanto debemos crear uno nuevo.
+    if ((new_point = map_findpoint(pos_x, pos_y, -1)) < 0) {
+      // Si map_findpoint retorna -2 salimos (supongo que esto indica
+      // que ha petado algo).
+      if (new_point == -2) {
         return;
-      new_point=my_map->num_points;
-      my_map->points[new_point]=(lptpoint)malloc(sizeof(tpoint));
-      my_map->points[new_point]->x=pos_x+scroll_x;
-      my_map->points[new_point]->y=pos_y+scroll_y;
-      my_map->points[new_point]->links=0;
+      }
+
+      // obtenemos un nuevo punto a partir
+      // del contador de puntos.
+      new_point = my_map->num_points;
+
+      // creamos un nuevo punto en la lista de puntos del editor
+      // de mapas.
+      my_map->points[new_point] = (lptpoint)malloc(sizeof(tpoint));
+      my_map->points[new_point]->x = pos_x + scroll_x;
+      my_map->points[new_point]->y = pos_y + scroll_y;
+      my_map->points[new_point]->links = 0; // ¿Enlaces? Supongo que esto debe indicar el número de paredes que enlazan a este punto.
+
+      // incrementamos el contador de puntos del mapa.
       my_map->num_points++;
     }
-    else {
-      for (i=0;i<my_map->num_walls;i++) {
-        if ((my_map->walls[i]->p1==new_point ||
-            my_map->walls[i]->p2==new_point) &&
-            my_map->walls[i]->front_region==-1) // &&
-          if (new_point!=first_point || region_status<3) //)
+    else 
+    {
+      // En caso contrario significa que hemos encontrado
+      // un punto ya existente.
+      for (i = 0; i < my_map->num_walls; i++) {
+        if ((my_map->walls[i]->p1 == new_point ||
+            my_map->walls[i]->p2 == new_point) &&
+            my_map->walls[i]->front_region == -1) {
+          // &&
+          if (new_point!=first_point || region_status<3) {//)
             return;
+          }
+        }
       }
     }
-    my_map->points[new_point]->active=1;
-    my_map->points[new_point]->links+=2;
-    last_point=new_point;
+
+    // indicamos que el nuevo punto está activo
+    // ¿le añadimos 2 enlaces? WTF!?
+    my_map->points[new_point]->active = 1;
+    my_map->points[new_point]->links += 2;
+
+    // indicamos que el último punto añadido es
+    // este punto.
+    last_point = new_point;
+
     //-------------------------------------------------------------------------
     //  A¤ade un muro a la lista
     //-------------------------------------------------------------------------
-    new_wall=my_map->num_walls;
-    if (region_status==0) { // Si es el primer muro
-      first_point=new_point;
-      first_wall=new_wall;
+    new_wall = my_map->num_walls;
+    // Si es el primer muro
+    if (region_status == 0) 
+    { 
+      first_point = new_point;
+      first_wall = new_wall;
     }
-    else {
-      my_map->walls[new_wall]->p2=new_point;
+    else 
+    {
+      // Añadimos un nuevo muro y ponemos que el 
+      // segundo punto de este muro es el nuevo punto.
+      my_map->walls[new_wall]->p2 = new_point;
+
+      // Incrementamos el número de muros.
       my_map->num_walls++;
+
       //-----------------------------------------------------------------------
       //  Cierra una region y la a¤ade a la lista
       //-----------------------------------------------------------------------
-      if (first_point==last_point && region_status>2) {
-        region_status=0;
-        region_deleted=1;
+      if (first_point == last_point && region_status > 2) {
+        region_status = 0;
+        region_deleted = 1;
+
+        // ¿Restamos 2 a los enlaces del punto nuevo?
         my_map->points[new_point]->links-=2;
-        new_region=my_map->num_regions;
-        my_map->regions[new_region]=(lptregion)malloc(sizeof(tregion));
-        my_map->regions[new_region]->floor_height=altura_suelo;
-        my_map->regions[new_region]->ceil_height=altura_techo;
-        my_map->regions[new_region]->floor_tex=Tex[SUELO].cod;
-        my_map->regions[new_region]->ceil_tex=Tex[TECHO].cod;
-        my_map->regions[new_region]->fade=fade_sector;
-        my_map->regions[new_region]->type=0;
-        for (i=first_wall;i<=new_wall;i++)
-          my_map->walls[i]->front_region=new_region;
+
+        // Obtenemos un nueva región del contador de regiones.
+        new_region = my_map->num_regions;
+
+        // Creamos una nueva región.
+        my_map->regions[new_region] = (lptregion)malloc(sizeof(tregion));
+        my_map->regions[new_region]->floor_height = altura_suelo;
+        my_map->regions[new_region]->ceil_height = altura_techo;
+        my_map->regions[new_region]->floor_tex = Tex[SUELO].cod;
+        my_map->regions[new_region]->ceil_tex = Tex[TECHO].cod;
+        my_map->regions[new_region]->fade = fade_sector;
+        my_map->regions[new_region]->type = 0; // ¿Para qué vale esto?
+
+        // Asociamos a todas las paredes nuevas
+        // la nueva región.
+        for (i = first_wall; i <= new_wall; i++) {
+          my_map->walls[i]->front_region = new_region;
+        }
+
+        // Incrementamos el número de regiones.
         my_map->num_regions++;
+
+        // ¿Por qué se hacía esto y ahora está comentado?
 //        map_sortregions();
+//
         //---------------------------------------------------------------------
         // Apago tanto los vertices como las paredes
         //---------------------------------------------------------------------
-        for (i=first_wall;i<=new_wall;i++) {
-          my_map->walls[i]->front_region=new_region;
-          my_map->walls[i]->type=angulo_provisional;
+        for (i = first_wall; i <= new_wall; i++) {
+          my_map->walls[i]->front_region = new_region;
+          my_map->walls[i]->type = angulo_provisional;
         }
+
+        // ¿What?
         map_off();
         return;
       }
+
+      // Añade un nuevo muro.
       new_wall++;
     }
 
+    // Incrementamos el estado de región.
     region_status++;
 
+    // Reservamos un nuevo muro.
     my_map->walls[new_wall]=(lptwall)malloc(sizeof(twall));
-    my_map->walls[new_wall]->active=1;
-    my_map->walls[new_wall]->front_region=-1;
-    my_map->walls[new_wall]->back_region=-1;
-    my_map->walls[new_wall]->texture=Tex[PARED].cod;
-    my_map->walls[new_wall]->fade=fade_pared;
-    my_map->walls[new_wall]->p1=new_point;
-    my_map->walls[new_wall]->p2=-1;
-  }
-  if (!(mouse_b&1))
-    old_but1=0;
+    // Indica que la pared está activa.
+    my_map->walls[new_wall]->active = 1;
+    // Ponemos que las regiones de este muro son -1 (supongo
+    // que para indicar que está a medio hacer).
+    my_map->walls[new_wall]->front_region = -1;
+    my_map->walls[new_wall]->back_region = -1;
+    // Código de textura y luminosidad.
+    my_map->walls[new_wall]->texture = Tex[PARED].cod;
+    my_map->walls[new_wall]->fade = fade_pared;
 
-  if (mouse_b&2 && old_but2==0) {
+    // Primer vértice igual a nuevo vértice.
+    my_map->walls[new_wall]->p1 = new_point;
+    // Segundo vértice a -1 (supongo que esto indica que el 
+    // muro está a medio hacer.
+    my_map->walls[new_wall]->p2 = -1;
+  }
+
+  if (!(mouse_b&1)) {
+    old_but1 = 0;
+  }
+
+  // Si se presiona el botón derecho del ratón.
+  if (mouse_b&2 && old_but2 == 0) {
     old_but2=1;
     if (region_status==0 && region_deleted) {
 //    map_deleteregion(my_map->num_regions-1);
@@ -2368,7 +2633,7 @@ void map_editregion()
   int i;
 
   if (mouse_b&1) {
-    if (old_but1==0) {
+    if (old_but1 == 0) {
       map_off();
       //-----------------------------------------------------------------------
       //  Busca el vertice y si no lo encuentra sale
@@ -2409,7 +2674,7 @@ void map_editregion()
     old_but1=0;
   }
 
-  if(scan_code==_DEL) {
+  if (scan_code == _DEL) {
     map_deleteregion(edit_region);
     edit_region=-1;
     map_off();
@@ -2434,19 +2699,25 @@ void map_editregion()
 
 void map_draw()
 {
-  int i,j;
-  int p1,p2;
-  char *direccion=(char *)v.ptr+v.an*12*big2+4*big2;
-  int ancho=v.an/big2;
-  int x0,y0,x1,y1;
-  int new_scroll_x,new_scroll_y;
-  int inc,inc_aux,aux_x,aux_y,ini_i;
+  int i, j;
+  int p1, p2;
+  char *direccion = (char *)v.ptr+v.an*12*big2+4*big2;
+  int ancho = v.an / big2;
+  int x0, y0, x1, y1;
+  int mx, my; // punto medio.  
+  int nx, ny; // normal del mapa.
 
-  aux_x=M_ANCHO_VENTANA*big2-M_ANCHO_VENTANA*big2/zoom_level;
-  aux_y=M_ALTO_VENTANA*big2-M_ALTO_VENTANA*big2/zoom_level;
+  float nl;
 
-  new_scroll_x=scroll_x+aux_x;
-  new_scroll_y=scroll_y+aux_y;
+  int psx,psy,pex,pey;
+  int new_scroll_x, new_scroll_y;
+  int inc, inc_aux, aux_x, aux_y, ini_i;
+
+  aux_x = M_ANCHO_VENTANA*big2-M_ANCHO_VENTANA*big2/zoom_level;
+  aux_y = M_ALTO_VENTANA*big2-M_ALTO_VENTANA*big2/zoom_level;
+
+  new_scroll_x = scroll_x+aux_x;
+  new_scroll_y = scroll_y+aux_y;
 
   //-------------------------------------------------------------------------
   //  Pinta la zona de edicion (bordes negros)
@@ -2596,28 +2867,38 @@ void map_draw()
   //---------------------------------------------------------------------------
   //  Dibujo las paredes
   //---------------------------------------------------------------------------
-  for (i=0;i<my_map->num_walls;i++) {
+  for (i = 0; i < my_map->num_walls; i++) {
+    p1 = my_map->walls[i]->p1;
+    p2 = my_map->walls[i]->p2;
+
+    psx = my_map->points[p1]->x;
+    psy = my_map->points[p1]->y;
+    pex = my_map->points[p2]->x;
+    pey = my_map->points[p2]->y;
+    
+    //  Coordenadas de pantalla con el zoom
+    x0 = zoom_level * (psx - new_scroll_x) / big2;
+    y0 = zoom_level * (psy - new_scroll_y) / big2;
+    x1 = zoom_level * (pex - new_scroll_x) / big2;
+    y1 = zoom_level * (pey - new_scroll_y) / big2;
+
+    mx = x0 + ((x1 - x0) / 2);
+    my = y0 + ((y1 - y0) / 2);
+
+    // calculamos la normal de la pared
+    nx = -(pey - psy);
+    ny = pex - psx;
+    nl = sqrtf(nx * nx + ny * ny);
+    nx = ((float)nx/nl) * 4;
+    ny = ((float)ny/nl) * 4;
+
+    // dibujamos las paredes y las normales de las paredes.
     if (!my_map->walls[i]->active) {
-      p1=my_map->walls[i]->p1;
-      p2=my_map->walls[i]->p2;
-      //  Coordenadas de pantalla con el zoom
-      x0=zoom_level*(my_map->points[p1]->x-new_scroll_x)/big2;
-      y0=zoom_level*(my_map->points[p1]->y-new_scroll_y)/big2;
-      x1=zoom_level*(my_map->points[p2]->x-new_scroll_x)/big2;
-      y1=zoom_level*(my_map->points[p2]->y-new_scroll_y)/big2;
       draw_line(x0,y0,x1,y1,c3);
-    }
-  }
-  for (i=0;i<my_map->num_walls;i++) {
-    if (my_map->walls[i]->active) {
-      p1=my_map->walls[i]->p1;
-      p2=my_map->walls[i]->p2;
-      //  Coordenadas de pantalla con el zoom
-      x0=zoom_level*(my_map->points[p1]->x-new_scroll_x)/big2;
-      y0=zoom_level*(my_map->points[p1]->y-new_scroll_y)/big2;
-      x1=zoom_level*(my_map->points[p2]->x-new_scroll_x)/big2;
-      y1=zoom_level*(my_map->points[p2]->y-new_scroll_y)/big2;
+      draw_line(mx,my,mx + nx,my + ny,c3);
+    } else {
       draw_line(x0,y0,x1,y1,c4);
+      draw_line(mx,my,mx + nx,my + ny,c4);
     }
   }
 
@@ -2685,16 +2966,19 @@ void map_editflag()
   else if (!(mouse_b&1)) {
     old_but1=0;
   }
-  if(scan_code==_DEL) {
-    edit_flag=-1;
-    for (i=0;i<my_map->num_flags;i++) {
+
+  if (scan_code == _DEL) {
+    edit_flag = -1;
+    for (i = 0; i < my_map->num_flags; i++) {
       if (my_map->flags[i]->number==num_bandera) {
         edit_flag=i;
         break;
       }
     }
-    if (edit_flag==-1)
+
+    if (edit_flag==-1) {
       return;
+    }
     my_map->num_flags--;
     free(my_map->flags[edit_flag]);
     my_map->flags[edit_flag]=my_map->flags[my_map->num_flags];
@@ -4105,29 +4389,34 @@ void map_reduce(int ancho, int alto, char *buffer)
 
   map_boundingbox();
 
-  if (my_map->bbox_x_ini>=my_map->bbox_x_fin ||
-      my_map->bbox_y_ini>=my_map->bbox_y_fin)
+  if (my_map->bbox_x_ini >= my_map->bbox_x_fin ||
+      my_map->bbox_y_ini >= my_map->bbox_y_fin) {
     return;
+  }
 
-  aspect_ratio_x=(float)ancho/(float)(my_map->bbox_x_fin-my_map->bbox_x_ini+1);
-  aspect_ratio_y=(float)alto/(float)(my_map->bbox_y_fin-my_map->bbox_y_ini+1);
+  aspect_ratio_x = (float)ancho/(float)(my_map->bbox_x_fin - my_map->bbox_x_ini+1);
+  aspect_ratio_y = (float)alto/(float)(my_map->bbox_y_fin - my_map->bbox_y_ini+1);
 
-  if (aspect_ratio_x<aspect_ratio_y)
-    aspect_ratio_y=aspect_ratio_x;
-  else
-    aspect_ratio_x=aspect_ratio_y;
+  if (aspect_ratio_x < aspect_ratio_y) 
+  {
+    aspect_ratio_y = aspect_ratio_x;
+  }
+  else 
+  {
+    aspect_ratio_x = aspect_ratio_y;
+  }
 
-  incx=(ancho-(aspect_ratio_x*(my_map->bbox_x_fin-my_map->bbox_x_ini+1)))/2;
-  incy=(alto-(aspect_ratio_y*(my_map->bbox_y_fin-my_map->bbox_y_ini+1)))/2;
+  incx = (ancho - (aspect_ratio_x * (my_map->bbox_x_fin - my_map->bbox_x_ini + 1))) / 2;
+  incy = (alto - (aspect_ratio_y * (my_map->bbox_y_fin - my_map->bbox_y_ini + 1))) / 2;
 
-  for (i=0;i<my_map->num_walls;i++) {
-    p1=my_map->walls[i]->p1;
-    p2=my_map->walls[i]->p2;
+  for (i = 0; i < my_map->num_walls; i++) {
+    p1 = my_map->walls[i]->p1;
+    p2 = my_map->walls[i]->p2;
 
-    x0=(int)((float)(my_map->points[p1]->x-my_map->bbox_x_ini)*aspect_ratio_x);
-    y0=(int)((float)(my_map->points[p1]->y-my_map->bbox_y_ini)*aspect_ratio_y);
-    x1=(int)((float)(my_map->points[p2]->x-my_map->bbox_x_ini)*aspect_ratio_x);
-    y1=(int)((float)(my_map->points[p2]->y-my_map->bbox_y_ini)*aspect_ratio_y);
+    x0 = (int)((float)(my_map->points[p1]->x-my_map->bbox_x_ini)*aspect_ratio_x);
+    y0 = (int)((float)(my_map->points[p1]->y-my_map->bbox_y_ini)*aspect_ratio_y);
+    x1 = (int)((float)(my_map->points[p2]->x-my_map->bbox_x_ini)*aspect_ratio_x);
+    y1 = (int)((float)(my_map->points[p2]->y-my_map->bbox_y_ini)*aspect_ratio_y);
 
     wline(buffer, ancho, ancho, alto, x0+incx, y0+incy, x1+incx, y1+incy, c4);
   }
