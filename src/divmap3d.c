@@ -2501,7 +2501,11 @@ void map_addpoint()
   static int angulo_provisional;
 
   // Si se ha presionado el botón izquierdo del ratón.
-  if (mouse_b & 1 && old_but1 == 0) {
+  if (mouse_b & 1 && old_but1 == 0 || scan_code == _SPC) {
+
+    if (scan_code == _SPC) {
+      scan_code = 0;
+    }
 
     // ¿?
     old_but1 = 1;
