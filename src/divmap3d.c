@@ -35,6 +35,7 @@
 #define TOPE_TECHO    4096
 #define FIN_GRID      (32768-2560)
 
+#define M3D_DEFAULT_SCROLL_MOVEMENT 8
 #define M3D_ANCHO_THUMB   96
 #define M3D_ALTO_THUMB    88
 
@@ -49,7 +50,7 @@
 #define DEFAULT_ALTURA_SUELO 1024
 
 #define incremento_maximo 65536
-#define max_int           65536
+#define MAX_INT           65536
 
 #define PARED 0
 #define TECHO 1
@@ -123,7 +124,9 @@ void map_sortregions(int free_polys);
 void map_asignregions();
 void map_boundingbox();
 void map_reduce(int ancho, int alto, char *buffer);
-
+void map_update_heights();
+void map_set_floor_height(int new_height);
+void map_set_ceiling_height(int new_height);
 
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
 //  Prototipos externos
@@ -153,8 +156,8 @@ M3D_info *m3d;
 // Flags utilizados para indicar si se estแ
 // creando un sector, editando un vertice, una lํnea o un sector
 // o si se estแ editando una bandera.
-int       m3d_flags[5] = { 1, 0, 0, 0, 0 };
-int       tex_sop[11] = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
+int m3d_flags[5] = { 1, 0, 0, 0, 0 };
+int tex_sop[11] = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
 
 int modo_edicion = PINTA_SECTOR;
 int pos_x, pos_y;
@@ -420,6 +423,10 @@ void MapperCreator0(void)
   v.tipo       = 1;
   v.titulo     = texto[442];
   v.nombre     = texto[442];
+  // TODO: Hacer que todos estos valores dependan realmente
+  // de la variable vga_an y vga_al que son las que contienen
+  // el tama๑o de la pantalla. De esta forma conseguiremos
+  // que sea "redimensionable".
   v.an         = ANCHO_REAL_VENTANA;
   v.al         = ALTO_REAL_VENTANA;
 
@@ -585,12 +592,22 @@ void MapperCreator2(void)
 {
   int an = v.an / big2,
       al = v.al / big2;
+
   int need_refresh = 0;
-  int inc, aux, dif_x, dif_y;
+
+  int inc, 
+      aux, 
+      dif_x, 
+      dif_y;
+
+  int choose_floor = 0,
+      choose_ceiling = 0,
+      choose_wall = 0,
+      choose_background = 0;
 
   _process_items();
 
-  v_pausa=1;
+  v_pausa = 1;
   if (modo_edicion == PINTA_SECTOR || modo_edicion == EDITA_LINEA) {
     actualiza_listbox(&lpared);
   }
@@ -864,22 +881,7 @@ void MapperCreator2(void)
       // Textura de Pared
       if(wmouse_in(ANCHO_VENTANA+6,          11, 50, 50))
       {
-        if(m3d_edit.fpg_path[0]==0)
-        {
-          if(comprobar_fichero())
-          {
-            strcpy((char *)m3d_edit.fpg_name,input);
-            strcpy((char *)m3d_edit.fpg_path,full);
-            M3D_crear_thumbs(&ltexturasbr,1);
-          }
-        }
-        if(m3d_edit.fpg_path[0]!=0)
-        {
-          TipoTex = PARED;
-          dialogo(MapperBrowseFPG0);
-          if(edit_wall != -1) my_map->walls[edit_wall]->texture=Tex[PARED].cod;
-          need_refresh=1;
-        }
+        choose_wall = 1;
       }
     }
 
@@ -888,63 +890,19 @@ void MapperCreator2(void)
       // Textura de Techo
       if(wmouse_in(ANCHO_VENTANA+6,     11+50+1, 50, 50))
       {
-        if(m3d_edit.fpg_path[0]==0)
-        {
-          if(comprobar_fichero())
-          {
-            strcpy((char *)m3d_edit.fpg_name,input);
-            strcpy((char *)m3d_edit.fpg_path,full);
-            M3D_crear_thumbs(&ltexturasbr,1);
-          }
-        }
-        if(m3d_edit.fpg_path[0]!=0)
-        {
-          TipoTex = TECHO;
-          dialogo(MapperBrowseFPG0);
-          if(edit_region != -1) my_map->regions[edit_region]->ceil_tex=Tex[TECHO].cod;
-          need_refresh=1;
-        }
+        choose_ceiling = 1;
       }
+
       // Textura de Suelo
       else if(wmouse_in(ANCHO_VENTANA+6, 11+100+2+12, 50, 50))
       {
-        if(m3d_edit.fpg_path[0]==0)
-        {
-          if(comprobar_fichero())
-          {
-            strcpy((char *)m3d_edit.fpg_name,input);
-            strcpy((char *)m3d_edit.fpg_path,full);
-            M3D_crear_thumbs(&ltexturasbr,1);
-          }
-        }
-        if(m3d_edit.fpg_path[0]!=0)
-        {
-          TipoTex = SUELO;
-          dialogo(MapperBrowseFPG0);
-          if(edit_region != -1) my_map->regions[edit_region]->floor_tex=Tex[SUELO].cod;
-          need_refresh=1;
-        }
+        choose_floor = 1;
       }
     }
 
     if(wmouse_in(SELECTOR_FONDO_X, SELECTOR_FONDO_Y, 44, 23)) // Fondo
     {
-      if(m3d_edit.fpg_path[0]==0)
-      {
-        if(comprobar_fichero())
-        {
-          strcpy((char *)m3d_edit.fpg_name,input);
-          strcpy((char *)m3d_edit.fpg_path,full);
-          M3D_crear_thumbs(&ltexturasbr,1);
-        }
-      }
-
-      if(m3d_edit.fpg_path[0]!=0)
-      {
-        TipoTex = FONDO;
-        dialogo(MapperBrowseFPG0);
-        need_refresh=1;
-      }
+      choose_background = 1;
     }
 
     if(wmouse_in(an-63, al-12, 60, 9)) // Seleccion de FPG
@@ -971,7 +929,6 @@ void MapperCreator2(void)
       if (zoom_level > MAX_ZOOM) {
         zoom_level = MAX_ZOOM;
       }
-      map_draw();
       break;
 
     // Zoom Out
@@ -981,10 +938,71 @@ void MapperCreator2(void)
       if (zoom_level < MIN_ZOOM) {
         zoom_level = MIN_ZOOM;
       }
-      map_draw();
       break;
 
-    // ฟQu้ co๑o hace esto?
+    // Aumentamos y disminuimos bandera. 
+    case _E:
+      if (num_bandera > 0) {
+        num_bandera--;
+      }
+      break;
+
+    case _R:
+      if (num_bandera < 999) {
+        num_bandera++;
+      }
+      break;
+
+    // TODO: Redibujar los valores de altura.
+    // Altura techo
+    case _PGUP:
+      if (altura_techo < TOPE_TECHO) {
+        map_set_ceiling_height(altura_techo + 1);
+      }
+      fprintf(stdout, "altura_techo %d", altura_techo);
+      break;
+
+    case _PGDN:
+      if (altura_techo > altura_suelo) {
+        map_set_ceiling_height(altura_techo - 1);
+      }
+      fprintf(stdout, "altura_techo %d", altura_techo);
+      break;
+
+    // Altura suelo.
+    case _HOME:
+      if (altura_suelo < altura_techo) {
+        map_set_floor_height(altura_suelo + 1);
+      }
+      fprintf(stdout, "altura_suelo %d", altura_suelo);
+      break;
+
+    case _END:
+      if (altura_suelo > 0) {
+        map_set_floor_height(altura_suelo - 1);
+      }
+      fprintf(stdout, "altura_suelo %d", altura_suelo);
+      break;
+
+    // Elegir techo, suelo o fondo.
+    case _U:
+      choose_background = 1;
+      break;
+
+    case _I:
+      choose_floor = 1;
+      break;
+
+    case _O:
+      choose_wall = 1;
+      break;
+
+    case _P:
+      choose_ceiling = 1;
+      break;
+
+    // Esto intenta centrar de alguna manera
+    // el mapa en el contenido (aunque falla estrepitosamente).
     case _F10:
     case _C:
       map_boundingbox();
@@ -995,24 +1013,140 @@ void MapperCreator2(void)
       }
       else 
       {
-        scroll_x = (my_map->bbox_x_ini+my_map->bbox_x_fin)/2;
-        scroll_y = (my_map->bbox_y_ini+my_map->bbox_y_fin)/2;
+        scroll_x = (my_map->bbox_x_ini + my_map->bbox_x_fin) / 2;
+        scroll_y = (my_map->bbox_y_ini + my_map->bbox_y_fin) / 2;
       }
       scroll_x&=-64;
       scroll_y&=-64;
-      map_draw();
       break;
   }
+  map_draw();
+  scan_code = 0;
 
   grid_size = (4*big2) / zoom_level;
 
+  if (choose_background) {
+
+    if(m3d_edit.fpg_path[0]==0)
+    {
+      if(comprobar_fichero())
+      {
+        strcpy((char *)m3d_edit.fpg_name,input);
+        strcpy((char *)m3d_edit.fpg_path,full);
+        M3D_crear_thumbs(&ltexturasbr,1);
+      }
+    } else {
+      TipoTex = FONDO;
+      dialogo(MapperBrowseFPG0);
+      need_refresh=1;
+    }
+
+    choose_background = 0;
+ 
+  } else if (choose_floor) {
+        
+    if(m3d_edit.fpg_path[0]==0)
+    {
+      if(comprobar_fichero())
+      {
+        strcpy((char *)m3d_edit.fpg_name,input);
+        strcpy((char *)m3d_edit.fpg_path,full);
+        M3D_crear_thumbs(&ltexturasbr,1);
+      }
+    } else {
+      TipoTex = SUELO;
+      dialogo(MapperBrowseFPG0);
+      if(edit_region != -1) {
+        my_map->regions[edit_region]->floor_tex=Tex[SUELO].cod;
+      }
+      need_refresh=1;
+    }
+    choose_floor = 0;
+
+  } else if (choose_wall) {
+   
+    fprintf(stdout, "Choosing wall\n");
+    if(m3d_edit.fpg_path[0]==0)
+    {
+      fprintf(stdout, "if(m3d_edit.fpg_path[0]==0)\n");
+      if(comprobar_fichero())
+      {
+        strcpy((char *)m3d_edit.fpg_name,input);
+        strcpy((char *)m3d_edit.fpg_path,full);
+        M3D_crear_thumbs(&ltexturasbr,1);
+      }
+    } else {
+      TipoTex = PARED;
+      dialogo(MapperBrowseFPG0);
+      if(edit_wall != -1) {
+        my_map->walls[edit_wall]->texture=Tex[PARED].cod;
+      }
+      need_refresh=1;
+    }
+    choose_wall = 0;
+
+  } else if (choose_ceiling) {
+
+    if(m3d_edit.fpg_path[0]==0)
+    {
+      if(comprobar_fichero())
+      {
+        strcpy((char *)m3d_edit.fpg_name,input);
+        strcpy((char *)m3d_edit.fpg_path,full);
+        M3D_crear_thumbs(&ltexturasbr,1);
+      }
+    } else {
+      TipoTex = TECHO;
+      dialogo(MapperBrowseFPG0);
+      if(edit_region != -1) {
+        my_map->regions[edit_region]->ceil_tex=Tex[TECHO].cod;
+      }
+      need_refresh=1;
+    }
+    choose_ceiling = 0;
+
+  }
+
   // Scroll del mapa
   if (!(v.item[5].estado&2) && !(v.item[8].estado&2) && !(v.item[9].estado&2)) {
-    if(kbdFLAGS[0x4B]) { scroll_x-=(8*big2)/zoom_level; map_draw(); }
-    if(kbdFLAGS[0x4D]) { scroll_x+=(8*big2)/zoom_level; map_draw(); }
-    if(kbdFLAGS[0x48]) { scroll_y-=(8*big2)/zoom_level; map_draw(); }
-    if(kbdFLAGS[0x50]) { scroll_y+=(8*big2)/zoom_level; map_draw(); }
+    // Controlamos el movimiento del mapa.
+    if (key(_LEFT)) {
+      //scroll_x -= (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level;
+      if (key(_L_SHIFT) || key(_R_SHIFT)) 
+        scroll_x -= 2;
+      else
+        scroll_x -= 1;
+      map_draw(); 
+    }
+
+    if(key(_RIGHT)) { 
+      //scroll_x += (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level; 
+      if (key(_L_SHIFT) || key(_R_SHIFT)) 
+        scroll_x += 2;
+      else
+        scroll_x += 1;
+      map_draw(); 
+    }
+
+    if(key(_UP)) { 
+      //scroll_y -= (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level; 
+      if (key(_L_SHIFT) || key(_R_SHIFT)) 
+        scroll_y -= 2;
+      else
+        scroll_y -= 1;
+      map_draw(); 
+    }
+
+    if(key(_DOWN)) { 
+      //scroll_y += (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level; 
+      if (key(_L_SHIFT) || key(_R_SHIFT)) 
+        scroll_y += 2;
+      else
+        scroll_y += 1;
+      map_draw(); 
+    }
   }
+
 /*
   if( (mouse_x-v.x)/big2 >  3 && (mouse_x-v.x)/big2 <  3+ANCHO_VENTANA+2 &&
       (mouse_y-v.y)/big2 > 11 && (mouse_y-v.y)/big2 < 11+ALTO_VENTANA+2 )
@@ -1037,47 +1171,58 @@ void MapperCreator2(void)
   } else leer_mouse=1;
 */
 
-  if( MouseFocus )
-  if( (mouse_x-v.x)/big2 >  3 && (mouse_x-v.x)/big2 <  3+ANCHO_VENTANA+2 &&
-      (mouse_y-v.y)/big2 > 11 && (mouse_y-v.y)/big2 < 11+ALTO_VENTANA+2 )
-  {
-    if (mouse_b&2) {
-      map_draw();
-      if(!(old_mouse_b&2))
-      {
-        /*
-        scroll_x += (mouse_x-v.x- 3*big2-M_ANCHO_VENTANA*big2)/zoom_level;
-        scroll_y += (mouse_y-v.y-11*big2- M_ALTO_VENTANA*big2)/zoom_level;
-        mouse_x   = v.x+ 3*big2+M_ANCHO_VENTANA*big2;
-        mouse_y   = v.y+11*big2+ M_ALTO_VENTANA*big2;
-        */
-        last_x    = mouse_x;
-        last_y    = mouse_y;
-        //set_mouse(mouse_x, mouse_y);
-      }
-      if (!leer_mouse) {
-        mouse_graf=17;
-        read_mouse();
-        scroll_x+=((mouse_x-last_x)*big2)/zoom_level;
-        scroll_y+=((mouse_y-last_y)*big2)/zoom_level;
-        mouse_x=last_x;
-        mouse_y=last_y;
-        set_mouse(last_x,last_y);
-      } else {
-        leer_mouse=0;
-        last_x=mouse_x;
-        last_y=mouse_y;
-      }
-      if(scroll_x<0) scroll_x=0;
-      if(scroll_y<0) scroll_y=0;
-      if(scroll_x>FIN_GRID) scroll_x=FIN_GRID;
-      if(scroll_y>FIN_GRID) scroll_y=FIN_GRID;
-    } else leer_mouse=1;
-  } else leer_mouse=1;
+  if( MouseFocus ) {
+    if( (mouse_x-v.x)/big2 >  3 && (mouse_x-v.x)/big2 <  3+ANCHO_VENTANA+2 &&
+        (mouse_y-v.y)/big2 > 11 && (mouse_y-v.y)/big2 < 11+ALTO_VENTANA+2 )
+    {
+      if (mouse_b&2) {
+        map_draw();
+        if(!(old_mouse_b&2))
+        {
+          /*
+          scroll_x += (mouse_x-v.x- 3*big2-M_ANCHO_VENTANA*big2)/zoom_level;
+          scroll_y += (mouse_y-v.y-11*big2- M_ALTO_VENTANA*big2)/zoom_level;
+          mouse_x   = v.x+ 3*big2+M_ANCHO_VENTANA*big2;
+          mouse_y   = v.y+11*big2+ M_ALTO_VENTANA*big2;
+          */
+          last_x    = mouse_x;
+          last_y    = mouse_y;
+          //set_mouse(mouse_x, mouse_y);
+        }
+        if (!leer_mouse) {
+          mouse_graf=17;
+          read_mouse();
+          scroll_x+=((mouse_x-last_x)*big2)/zoom_level;
+          scroll_y+=((mouse_y-last_y)*big2)/zoom_level;
+          mouse_x=last_x;
+          mouse_y=last_y;
+          set_mouse(last_x,last_y);
+        } else {
+          leer_mouse=0;
+          last_x=mouse_x;
+          last_y=mouse_y;
+        }
 
+        if (scroll_x < 0) scroll_x=0;
+        if (scroll_y < 0) scroll_y=0;
+        if (scroll_x > FIN_GRID) scroll_x=FIN_GRID;
+        if (scroll_y > FIN_GRID) scroll_y=FIN_GRID;
+
+      } else {
+        leer_mouse = 1;
+      }
+    } else {
+      leer_mouse = 1;
+    }
+  }
 
   mostrar_coordenadas();
-  if(wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA)) if(mouse_b || old_mouse_b) map_draw();
+  if(wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA)) {
+    if(mouse_b || old_mouse_b) {
+      map_draw();
+    }
+  }
+
 //map_draw();
 
   if(need_refresh)
@@ -1096,10 +1241,16 @@ void MapperCreator3(void)
 {
   unsigned n;
 
+  // TODO: Si estamos editando, resetear la edici๓n porque
+  // si no esto peta de buena manera.
+  if (modo_edicion == PINTA_SECTOR) {
+    map_deletenullregion();
+  } 
+
   // Libera texturas de ventana de seleccion
-  for(n=0; n<max_texturas; n++)
+  for (n=0; n<max_texturas; n++)
   {
-    if(thumb_tex[n].ptr!=NULL)
+    if (thumb_tex[n].ptr!=NULL)
     {
       free(thumb_tex[n].ptr);
       thumb_tex[n].ptr=NULL;
@@ -1107,9 +1258,9 @@ void MapperCreator3(void)
   }
 
   // Libera texturas de ventana de mapeador
-  for(n=0; n<4; n++)
+  for (n=0; n<4; n++)
   {
-    if(Tex[n].gra!=NULL)
+    if (Tex[n].gra!=NULL)
     {
       free(Tex[n].gra);
       Tex[n].gra=NULL;
@@ -2271,6 +2422,56 @@ void draw_line(int x0, int y0, int x1, int y1, byte color)
     x0 * big2, y0 * big2, x1 * big2, y1 * big2, color);
 }
 
+void map_update_heights() {
+  if(edit_region != -1)
+  {
+    my_map->regions[edit_region]->ceil_height  = altura_techo;
+    my_map->regions[edit_region]->floor_height = altura_suelo;
+  }
+}
+
+void map_set_floor_height(int new_value) {
+  altura_suelo = new_value;
+  if (altura_suelo > TOPE_TECHO) {
+    altura_suelo = TOPE_TECHO;
+  }
+
+  if (altura_suelo < 0) {
+    altura_suelo = 0;
+  }
+
+  sprintf(cadenas[4], "%d", altura_suelo);
+
+  if (altura_suelo > altura_techo)
+  {
+    altura_techo = altura_suelo;
+    sprintf(cadenas[3], "%d", altura_techo);
+  }
+
+  map_update_heights();
+}
+
+void map_set_ceiling_height(int new_value) {
+  altura_techo = new_value;
+  if (altura_techo > TOPE_TECHO) {
+    altura_techo = TOPE_TECHO;
+  }
+
+  if (altura_techo < 0) {
+    altura_techo = 0;
+  }
+
+  sprintf(cadenas[3], "%d", altura_techo);
+
+  if (altura_suelo > altura_techo)
+  {
+    altura_suelo = altura_techo;
+    sprintf(cadenas[4], "%d", altura_suelo);
+  }
+
+  map_update_heights();
+}
+
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
 //  Aคade un vertice al mapa
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
@@ -2674,9 +2875,10 @@ void map_editregion()
     old_but1=0;
   }
 
+  // Borra una regi๓n.
   if (scan_code == _DEL) {
     map_deleteregion(edit_region);
-    edit_region=-1;
+    edit_region =- 1;
     map_off();
     map_draw();
   }
@@ -2967,10 +3169,11 @@ void map_editflag()
     old_but1=0;
   }
 
+  // Borra una bandera.
   if (scan_code == _DEL) {
     edit_flag = -1;
     for (i = 0; i < my_map->num_flags; i++) {
-      if (my_map->flags[i]->number==num_bandera) {
+      if (my_map->flags[i]->number == num_bandera) {
         edit_flag=i;
         break;
       }
@@ -2979,6 +3182,7 @@ void map_editflag()
     if (edit_flag==-1) {
       return;
     }
+
     my_map->num_flags--;
     free(my_map->flags[edit_flag]);
     my_map->flags[edit_flag]=my_map->flags[my_map->num_flags];
@@ -3201,14 +3405,16 @@ void map_deletepoint(int point)
 void map_deletenullregion()
 {
   if(my_map->walls[my_map->num_walls]) {
-  if (my_map->walls[my_map->num_walls]->p2==-1) {
-    my_map->walls[my_map->num_walls]->p2=first_point;
-    my_map->num_walls++;
+    if (my_map->walls[my_map->num_walls]->p2==-1) {
+      my_map->walls[my_map->num_walls]->p2=first_point;
+      my_map->num_walls++;
+    }
   }
-}
   map_deletenullwalls();
+  
   region_status=0;
   region_deleted=0;
+
   map_off();
 }
 
@@ -3740,6 +3946,7 @@ void map_read(M3D_info *m3d_aux)
     map_read_old( m3d_aux );
     return;
   }
+
   if (strcmp(cwork,"wld\x1a\x0d\x0a\x01\x00"))
   {
     fclose(fichero);
@@ -3924,7 +4131,7 @@ int map_findregion(int x, int y, int discard_region)
     x0=-1; k1=0; k2=0; dentro=0;
     do {
       find_first_x(x0,y);
-      if (xmin!=max_int) {
+      if (xmin!=MAX_INT) {
         if (dentro) {
           if (x>x0+1 && x<xmin) {
             if (my_map->regions[i]->type>type) {
@@ -3938,7 +4145,7 @@ int map_findregion(int x, int y, int discard_region)
         dentro^=trans;
         x0=xmin;
       }
-    } while (xmin!=max_int);
+    } while (xmin!=MAX_INT);
   }
   return(aux_region);
 }
@@ -3950,7 +4157,7 @@ int map_findregion(int x, int y, int discard_region)
 void find_first_x(int xi,int y) {
   int x0,y0,x1,y1,n,x;
 
-  trans=0; xmin=max_int;
+  trans=0; xmin=MAX_INT;
 
   for (n=0;n<n_puntos-1;n++) {
     x0=poligono[n*2]; y0=poligono[n*2+1];
@@ -3964,7 +4171,7 @@ void find_first_x(int xi,int y) {
 
   // Se ha obtenido xmin, ahora se ha de contabilizar k1 y k2 actualizando t
 
-  if (xmin!=max_int) for (n=0;n<n_puntos-1;n++) {
+  if (xmin!=MAX_INT) for (n=0;n<n_puntos-1;n++) {
     x0=poligono[n*2]; y0=poligono[n*2+1];
     x1=poligono[n*2+2]; y1=poligono[n*2+3];
     if (y0>y1) { swap(x0,x1); swap(y0,y1); }
@@ -4006,7 +4213,7 @@ int map_findregion2(int x, int y, int discard_region)
     x0=-1; k1=0; k2=0; dentro=0;
     do {
       find_first_x2(x0,y,&polys[i*reg_polys+5]);
-      if (xmin!=max_int) {
+      if (xmin!=MAX_INT) {
         if (dentro) {
           if (x>x0+1 && x<xmin) {
             if (my_map->regions[i]->type>type) {
@@ -4020,7 +4227,7 @@ int map_findregion2(int x, int y, int discard_region)
         dentro^=trans;
         x0=xmin;
       }
-    } while (xmin!=max_int);
+    } while (xmin!=MAX_INT);
   }
   return(aux_region);
 }
@@ -4032,7 +4239,7 @@ int map_findregion2(int x, int y, int discard_region)
 void find_first_x2(int xi,int y,word *poligono) {
   int x0,y0,x1,y1,n,x;
 
-  trans=0; xmin=max_int;
+  trans=0; xmin=MAX_INT;
 
   for (n=0;n<n_puntos-1;n++) {
     x0=poligono[n*2]; y0=poligono[n*2+1];
@@ -4046,7 +4253,7 @@ void find_first_x2(int xi,int y,word *poligono) {
 
   // Se ha obtenido xmin, ahora se ha de contabilizar k1 y k2 actualizando t
 
-  if (xmin!=max_int) for (n=0;n<n_puntos-1;n++) {
+  if (xmin!=MAX_INT) for (n=0;n<n_puntos-1;n++) {
     x0=poligono[n*2]; y0=poligono[n*2+1];
     x1=poligono[n*2+2]; y1=poligono[n*2+3];
     if (y0>y1) { swap(x0,x1); swap(y0,y1); }
@@ -4234,7 +4441,9 @@ void map_asignregions()
   //---------------------------------------------------------------------------
   for (i=0;i<my_map->num_walls;i++) {
 
-    if ((i&7)==0) Progress((char *)texto[441],i,control);
+    if ((i&7)==0) {
+      Progress((char *)texto[441],i,control);
+    }
 
     // Inicializo las texturas de pared (partes alta y baja)
     my_map->walls[i]->texture_top=0;
@@ -4318,9 +4527,9 @@ void map_asignregions()
     //-------------------------------------------------------------------------
     // Si no comparte vertices
     //-------------------------------------------------------------------------
-    else if (muros[i].inside>1) {
-      xm=(my_map->points[my_map->walls[i]->p1]->x+my_map->points[my_map->walls[i]->p2]->x)/2;
-      ym=(my_map->points[my_map->walls[i]->p1]->y+my_map->points[my_map->walls[i]->p2]->y)/2;
+    else if (muros[i].inside > 1) {
+      xm = (my_map->points[my_map->walls[i]->p1]->x + my_map->points[my_map->walls[i]->p2]->x)/2;
+      ym = (my_map->points[my_map->walls[i]->p1]->y + my_map->points[my_map->walls[i]->p2]->y)/2;
 
       region_back=map_findregion2(xm,ym,muros[i].front);
 
@@ -4329,12 +4538,12 @@ void map_asignregions()
       //-------------------------------------------------------------------------
       // Si es interior
       //-------------------------------------------------------------------------
-      if (region_back!=-1) {
-        my_map->walls[i]->texture_top=my_map->walls[i]->texture;
-        my_map->walls[i]->texture_bot=my_map->walls[i]->texture;
-        my_map->walls[i]->back_region=region_back;
-        my_map->walls[i]->type=1;
-        my_map->walls[i]->texture=0;
+      if (region_back != -1) {
+        my_map->walls[i]->texture_top = my_map->walls[i]->texture;
+        my_map->walls[i]->texture_bot = my_map->walls[i]->texture;
+        my_map->walls[i]->back_region = region_back;
+        my_map->walls[i]->type = 1;
+        my_map->walls[i]->texture = 0;
       }
     }
   }
@@ -4362,16 +4571,22 @@ void map_boundingbox()
   my_map->bbox_x_fin=0;
   my_map->bbox_y_fin=0;
 
-  for (i=0;i<my_map->num_points;i++) {
-    if (my_map->bbox_x_ini>my_map->points[i]->x)
-      my_map->bbox_x_ini=my_map->points[i]->x;
-    if (my_map->bbox_x_fin<my_map->points[i]->x)
-      my_map->bbox_x_fin=my_map->points[i]->x;
+  for (i = 0; i < my_map->num_points; i++) {
+    if (my_map->bbox_x_ini > my_map->points[i]->x) {
+      my_map->bbox_x_ini = my_map->points[i]->x;
+    }
 
-    if (my_map->bbox_y_ini>my_map->points[i]->y)
-      my_map->bbox_y_ini=my_map->points[i]->y;
-    if (my_map->bbox_y_fin<my_map->points[i]->y)
-      my_map->bbox_y_fin=my_map->points[i]->y;
+    if (my_map->bbox_x_fin < my_map->points[i]->x) {
+      my_map->bbox_x_fin = my_map->points[i]->x;
+    }
+
+    if (my_map->bbox_y_ini > my_map->points[i]->y) {
+      my_map->bbox_y_ini = my_map->points[i]->y;
+    }
+
+    if (my_map->bbox_y_fin < my_map->points[i]->y) {
+      my_map->bbox_y_fin = my_map->points[i]->y;
+    }
   }
 }
 
