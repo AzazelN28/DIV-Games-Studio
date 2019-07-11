@@ -36,3 +36,7 @@ zipdiv
 *.a
 *.dll
 *.o
+library/
+examples/
+games/
+IFS/
