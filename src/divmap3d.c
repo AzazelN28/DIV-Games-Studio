@@ -23,8 +23,10 @@
 #define M_ANCHO_VENTANA    320 
 #define M_ALTO_VENTANA     240 
 
-#define SELECTOR_FONDO_X  ANCHO_VENTANA - 39
-#define SELECTOR_FONDO_Y  ALTO_VENTANA + 14
+//#define SELECTOR_FONDO_X  ANCHO_VENTANA - 39
+//#define SELECTOR_FONDO_Y  ALTO_VENTANA + 14
+#define SELECTOR_FONDO_X  601
+#define SELECTOR_FONDO_Y  494
 
 #define TOP_CLIP          1
 #define LEFT_CLIP         2
@@ -124,9 +126,10 @@ void map_sortregions(int free_polys);
 void map_asignregions();
 void map_boundingbox();
 void map_reduce(int ancho, int alto, char *buffer);
-void map_update_heights();
+void map_update_region_heights();
 void map_set_floor_height(int new_height);
 void map_set_ceiling_height(int new_height);
+void map_center();
 
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
 //  Prototipos externos
@@ -170,11 +173,12 @@ byte FPG_pal[768];
 byte FPG_xlat[256];
 int  FPG_thumbpos;
 
-char cadenas[5][10]; // 0 - Posicion X del cursor en la ventana de volcado
+char cadenas[6][10]; // 0 - Posicion X del cursor en la ventana de volcado
                      // 1 - Posicion Y del cursor en la ventana de volcado
                      // 2 - Numero de bandera a colocar
                      // 3 - Altura del techo
                      // 4 - Altura del suelo
+                     // 5 - Nivel de zoom
 
 char DummyArrayForFakingPurposesUsedInMapper[(TOPE_FADE+6)*1];
 
@@ -320,7 +324,7 @@ void MapperVisor0(void)
   v.titulo = m3d->m3d_name;
   v.nombre = m3d->m3d_name;
 
-  v_terminado=0;
+  v_terminado = 0;
 }
 
 /**
@@ -474,23 +478,10 @@ void MapperCreator0(void)
 
   // ฟEsto establece el zoom por defecto?
   zoom_level = DEFAULT_ZOOM_LEVEL;
+  sprintf(cadenas[5],"%d", (int)(zoom_level * 100));
 
   // Obtenemos el bounding box. Esto funciona bastante como el orto.
-  map_boundingbox();
-  if (my_map->bbox_x_ini == 65536) 
-  {
-    scroll_x = FIN_GRID / 2;
-    scroll_y = FIN_GRID / 2;
-  }
-  else 
-  {
-    scroll_x = (my_map->bbox_x_ini + my_map->bbox_x_fin) / 2;
-    scroll_y = (my_map->bbox_y_ini + my_map->bbox_y_fin) / 2;
-  }
-
-  // WHAT?
-  scroll_x &= -64;
-  scroll_y &= -64;
+  map_center();
 
   v_terminado = 0;
 }
@@ -587,7 +578,7 @@ void MapperCreator1(void)
 extern int last_x, last_y;
 extern int leer_mouse;
 
-// Esta es la funci๓n que se llama cuando se hace click????
+// Esta es la funci๓n que se llama cuando se hace click??
 void MapperCreator2(void)
 {
   int an = v.an / big2,
@@ -984,19 +975,23 @@ void MapperCreator2(void)
       fprintf(stdout, "altura_suelo %d", altura_suelo);
       break;
 
-    // Elegir techo, suelo o fondo.
+    // Elegir fondo, suelo pared o techo.
+    case _F3:
     case _U:
       choose_background = 1;
       break;
 
+    case _F4:
     case _I:
       choose_floor = 1;
       break;
 
+    case _F5:
     case _O:
       choose_wall = 1;
       break;
 
+    case _F6:
     case _P:
       choose_ceiling = 1;
       break;
@@ -1005,19 +1000,9 @@ void MapperCreator2(void)
     // el mapa en el contenido (aunque falla estrepitosamente).
     case _F10:
     case _C:
-      map_boundingbox();
-      if (my_map->bbox_x_ini == 65536) 
-      {
-        scroll_x = FIN_GRID/2;
-        scroll_y = FIN_GRID/2;
-      }
-      else 
-      {
-        scroll_x = (my_map->bbox_x_ini + my_map->bbox_x_fin) / 2;
-        scroll_y = (my_map->bbox_y_ini + my_map->bbox_y_fin) / 2;
-      }
-      scroll_x&=-64;
-      scroll_y&=-64;
+      map_center();
+      //scroll_x&=-64;
+      //scroll_y&=-64;
       break;
   }
   map_draw();
@@ -2162,17 +2147,20 @@ void PintaMapperThumbs(void)
   }
 }
 
+/**
+ * Pinta la textura de fondo.
+ */
 void PintaFondoThumb(void)
 {
   int x, y;
 
   if(Tex[FONDO].gra!=NULL)
   {
-    for(y=0; y<21*big2; y++)
+    for(y = 0; y < 21 * big2; y++)
     {
-      for(x=0; x<42*big2; x++)
+      for(x = 0; x < 42 * big2; x++)
       {
-        v.ptr[(175*big2+y)*v.an+(202*big2+x)]=Tex[FONDO].gra[y*42*big2+x];
+        v.ptr[((SELECTOR_FONDO_Y + 1) * big2 + y) * v.an + ((SELECTOR_FONDO_X + 1) * big2 + x)]=Tex[FONDO].gra[y*42*big2+x];
       }
     }
   }
@@ -2246,11 +2234,11 @@ void mostrar_coordenadas(void)
       map_draw();
     }
     else { // Coordenadas absolutas
-      sprintf(cadenas[0],"%04d",pos_x+scroll_x);
-      sprintf(cadenas[1],"%04d",pos_y+scroll_y);
+      sprintf(cadenas[0],"%04d",pos_x + scroll_x);
+      sprintf(cadenas[1],"%04d",pos_y + scroll_y);
     }
   } else {
-    strcpy(cadenas[0],"????");
+    sprintf(cadenas[0], "%d", (int)(zoom_level * 100));
     strcpy(cadenas[1],"????");
   }
 
@@ -2422,7 +2410,28 @@ void draw_line(int x0, int y0, int x1, int y1, byte color)
     x0 * big2, y0 * big2, x1 * big2, y1 * big2, color);
 }
 
-void map_update_heights() {
+/**
+ * Esta funci๓n centra el mapa utilizando las coordenadas
+ * de todos los puntos.
+ */
+void map_center() {
+  map_boundingbox();
+  if (my_map->bbox_x_ini == 65536) 
+  {
+    scroll_x = FIN_GRID / 2;
+    scroll_y = FIN_GRID / 2;
+  }
+  else 
+  {
+    scroll_x = (my_map->bbox_x_ini + my_map->bbox_x_fin) / 2 - ANCHO_VENTANA;
+    scroll_y = (my_map->bbox_y_ini + my_map->bbox_y_fin) / 2 - ALTO_VENTANA;
+  }
+}
+
+/**
+ * Actualiza las alturas del sector seleccionado.
+ */
+void map_update_region_heights() {
   if(edit_region != -1)
   {
     my_map->regions[edit_region]->ceil_height  = altura_techo;
@@ -2430,6 +2439,9 @@ void map_update_heights() {
   }
 }
 
+/**
+ * Actualiza la altura del suelo.
+ */
 void map_set_floor_height(int new_value) {
   altura_suelo = new_value;
   if (altura_suelo > TOPE_TECHO) {
@@ -2448,9 +2460,12 @@ void map_set_floor_height(int new_value) {
     sprintf(cadenas[3], "%d", altura_techo);
   }
 
-  map_update_heights();
+  map_update_region_heights();
 }
 
+/**
+ * Actualiza la altura del techo.
+ */
 void map_set_ceiling_height(int new_value) {
   altura_techo = new_value;
   if (altura_techo > TOPE_TECHO) {
@@ -2469,7 +2484,7 @@ void map_set_ceiling_height(int new_value) {
     sprintf(cadenas[4], "%d", altura_suelo);
   }
 
-  map_update_heights();
+  map_update_region_heights();
 }
 
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
@@ -3108,12 +3123,29 @@ void map_draw()
   //  Dibujo la linea desde el ultimo punto al cursor del raton
   //---------------------------------------------------------------------------
   if (region_status && wmouse_in(4, 12, ANCHO_VENTANA, ALTO_VENTANA)) {
+    
     //  Coordenadas de pantalla con el zoom
-    x0=zoom_level*(my_map->points[last_point]->x-new_scroll_x)/big2;
-    y0=zoom_level*(my_map->points[last_point]->y-new_scroll_y)/big2;
-    x1=zoom_level*(pos_x+scroll_x-new_scroll_x)/big2;
-    y1=zoom_level*(pos_y+scroll_y-new_scroll_y)/big2;
+    x0 = zoom_level * (my_map->points[last_point]->x - new_scroll_x) / big2;
+    y0 = zoom_level * (my_map->points[last_point]->y - new_scroll_y) / big2;
+    x1 = zoom_level * (pos_x + scroll_x - new_scroll_x) / big2;
+    y1 = zoom_level * (pos_y + scroll_y - new_scroll_y) / big2;
+
+    mx = x0 + ((x1 - x0) / 2);
+    my = y0 + ((y1 - y0) / 2);
+
+    // calculamos la normal de la pared
+    nx = -(y1 - y0);
+    ny = x1 - x0;
+    nl = sqrtf(nx * nx + ny * ny);
+    if (nl) {
+      nx = ((float)nx/nl) * 4;
+      ny = ((float)ny/nl) * 4;
+    }
+
     draw_line(x0,y0,x1,y1,c4);
+    if (nl) {
+      draw_line(mx,my,mx + nx,my + ny,c4);
+    }
   }
 
   v.volcar=1;
