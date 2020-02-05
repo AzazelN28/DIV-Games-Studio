@@ -54,7 +54,7 @@ if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0) 
   atexit(judas_uninit);
   atexit(timer_uninit);
 
-  if(SoundActive) {
+  if (SoundActive) {
     judas_config();
     File_Cfg=fopen("sound.cfg","rb");
     if(File_Cfg!=NULL) {

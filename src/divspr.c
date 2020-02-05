@@ -1,15 +1,15 @@
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 //      Module containing sprite generator code
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
 #include "global.h"
 #include "visor.hpp"
 #include "fpgfile.hpp"
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 //  Constantes
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
 #define HOMBRE   0
 #define HOMBRE_A 1
@@ -18,9 +18,9 @@
 #define ENANO    4
 #define ENANO_A  5
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 //  Prototipos
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
 void generador_sprites      (void);
 void FinalizaGenerador      (void);
@@ -35,14 +35,14 @@ void CargarTextura          (char *NombreTextura);
 void CargarSprite           (void);
 void IniCfg                 (void);
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 //  Variables
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
 int  TipoModelo[3]={ 1, 0, 0 };
 int  Armado=0;
-char FicheroMod[128] = "GENSPR/HOMBRE/ANIM.O3D";
-char FicheroAni[128] = "GENSPR/HOMBRE/ANIM.A3D";
+char FicheroMod[128] = "genspr/hombre/anim.o3d";
+char FicheroAni[128] = "genspr/hombre/anim.a3d";
 char TamText[10]   = "100";
 char AngText[10]   = "0";
 char PerText[10]   = "0";
@@ -84,9 +84,9 @@ buffer_sprite3d *InfoSpr;
 
 float spr_coefred;
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 //  Codigo principal del generador de sprites
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+//๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
 void generador_sprites(void) {
 #ifdef SPRITEGEN
@@ -190,12 +190,12 @@ int ParseAnimFile(void)
 
     switch(con2)
     {
-      case HOMBRE   : strcat(AnimFile, "GENSPR/HOMBRE/ANIM.HPP");   break;
-      case HOMBRE_A : strcat(AnimFile, "GENSPR/HOMBRE_A/ANIM.HPP"); break;
-      case MUJER    : strcat(AnimFile, "GENSPR/MUJER/ANIM.HPP");    break;
-      case MUJER_A  : strcat(AnimFile, "GENSPR/MUJER_A/ANIM.HPP");  break;
-      case ENANO    : strcat(AnimFile, "GENSPR/ENANO/ANIM.HPP");    break;
-      case ENANO_A  : strcat(AnimFile, "GENSPR/ENANO_A/ANIM.HPP");  break;
+      case HOMBRE   : strcat(AnimFile, "genspr/hombre/ANIM.HPP");   break;
+      case HOMBRE_A : strcat(AnimFile, "genspr/hombre_a/ANIM.HPP"); break;
+      case MUJER    : strcat(AnimFile, "genspr/mujer/ANIM.HPP");    break;
+      case MUJER_A  : strcat(AnimFile, "genspr/mujer_a/ANIM.HPP");  break;
+      case ENANO    : strcat(AnimFile, "genspr/enano/ANIM.HPP");    break;
+      case ENANO_A  : strcat(AnimFile, "genspr/enano_a/ANIM.HPP");  break;
     }
 
     if( (f=fopen(AnimFile, "rb")) == NULL ) return(0);
@@ -304,7 +304,7 @@ void GenSpr0(void)
   _button(100,      7, v.al-14, 0);
   _button(101, v.an-8, v.al-14, 2);
 
-  // Entrada de tamaคo
+  // Entrada de tama๏ฟฝo
   _get(426, 3+1, 11+65+2, text_len(texto[426])+16, (byte *)TamText, 5, 1, 1000);
 
   // Entrada de imagenes
@@ -314,7 +314,7 @@ void GenSpr0(void)
   _button(435, v.an-30, 10+70+5, 0);
   _button(427, v.an-14, 10+70+5, 0);
 
-  // Flags Hombre/Mujer/Niคo - armado
+  // Flags Hombre/Mujer/Ni๏ฟฝo - armado
   _flag(423,                                                                 3,95+2,&TipoModelo[0]);
   _flag(424,                                         3+11+text_len(texto[423]),95+2,&TipoModelo[1]);
   _flag(425,                    3+22+text_len(texto[423])+text_len(texto[424]),95+2,&TipoModelo[2]);
@@ -435,7 +435,7 @@ void GenSpr2(void)
     case 1: // Cancelar
       fin_dialogo=1;
       break;
-    case 2: // Tamaคo
+    case 2: // Tama๏ฟฝo
       mouse_graf=3;
       vuelca_ventana(0);
       volcado_copia();
@@ -458,7 +458,7 @@ void GenSpr2(void)
       CargarSprite();
       need_refresh=1;
       break;
-    case 3: // Nง de imagenes
+    case 3: // N๏ฟฝ de imagenes
       if(atoi(NumFrames) < 1) strcpy(NumFrames, "1");
       if(atoi(NumFrames) > InfoCfg.num_frames)
         itoa(InfoCfg.num_frames, NumFrames, 10);
@@ -506,14 +506,14 @@ void GenSpr2(void)
       volcado_copia();
       TipoModelo[0]=1; TipoModelo[1]=0; TipoModelo[2]=0;
       if(Armado) {
-        strcpy(FicheroMod, "GENSPR/HOMBRE_A/ANIM.O3D");
-        strcpy(FicheroAni, "GENSPR/HOMBRE_A/ANIM.A3D");
+        strcpy(FicheroMod, "genspr/hombre_a/ANIM.O3D");
+        strcpy(FicheroAni, "genspr/hombre_a/ANIM.A3D");
         memcpy(anim_spr,   anim_spr_hombre_a,   2000);
         memcpy(&lanim_spr, &lanim_spr_hombre_a, sizeof(struct t_listbox));
         lanim_spr.maximo = anim_total_hombre_a;
       } else {
-        strcpy(FicheroMod, "GENSPR/HOMBRE/ANIM.O3D");
-        strcpy(FicheroAni, "GENSPR/HOMBRE/ANIM.A3D");
+        strcpy(FicheroMod, "genspr/hombre/ANIM.O3D");
+        strcpy(FicheroAni, "genspr/hombre/ANIM.A3D");
         memcpy(anim_spr,   anim_spr_hombre,   2000);
         memcpy(&lanim_spr, &lanim_spr_hombre, sizeof(struct t_listbox));
         lanim_spr.maximo = anim_total_hombre;
@@ -544,8 +544,8 @@ void GenSpr2(void)
       volcado_copia();
       TipoModelo[0]=0; TipoModelo[1]=1; TipoModelo[2]=0;
       if(Armado) {
-        strcpy(FicheroMod, "GENSPR/MUJER_A/ANIM.O3D");
-        strcpy(FicheroAni, "GENSPR/MUJER_A/ANIM.A3D");
+        strcpy(FicheroMod, "genspr/mujer_a/ANIM.O3D");
+        strcpy(FicheroAni, "genspr/mujer_a/ANIM.A3D");
         memcpy(anim_spr,   anim_spr_mujer_a, 2000);
         memcpy(&lanim_spr, &lanim_spr_mujer_a, sizeof(struct t_listbox));
         lanim_spr.maximo = anim_total_mujer_a;
@@ -576,20 +576,20 @@ void GenSpr2(void)
       CargarSprite();
       need_refresh=1;
       break;
-    case 8: // Niคo
+    case 8: // Ni๏ฟฝo
       mouse_graf=3;
       vuelca_ventana(0);
       volcado_copia();
       TipoModelo[0]=0; TipoModelo[1]=0; TipoModelo[2]=1;
       if(Armado) {
-        strcpy(FicheroMod, "GENSPR/ENANO_A/ANIM.O3D");
-        strcpy(FicheroAni, "GENSPR/ENANO_A/ANIM.A3D");
+        strcpy(FicheroMod, "genspr/enano_a/ANIM.O3D");
+        strcpy(FicheroAni, "genspr/enano_a/ANIM.A3D");
         memcpy(anim_spr,   anim_spr_enano_a, 2000);
         memcpy(&lanim_spr, &lanim_spr_enano_a, sizeof(struct t_listbox));
         lanim_spr.maximo = anim_total_enano_a;
       } else {
-        strcpy(FicheroMod, "GENSPR/ENANO/ANIM.O3D");
-        strcpy(FicheroAni, "GENSPR/ENANO/ANIM.A3D");
+        strcpy(FicheroMod, "genspr/enano/ANIM.O3D");
+        strcpy(FicheroAni, "genspr/enano/ANIM.A3D");
         memcpy(anim_spr,   anim_spr_enano, 2000);
         memcpy(&lanim_spr, &lanim_spr_enano, sizeof(struct t_listbox));
         lanim_spr.maximo = anim_total_enano;
@@ -620,40 +620,40 @@ void GenSpr2(void)
       volcado_copia();
       if(Armado) {
         if(TipoModelo[0]) {
-          strcpy(FicheroMod, "GENSPR/HOMBRE_A/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/HOMBRE_A/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/hombre_a/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/hombre_a/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_hombre_a, 2000);
           memcpy(&lanim_spr, &lanim_spr_hombre_a, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_hombre_a;
         } else if(TipoModelo[1]) {
-          strcpy(FicheroMod, "GENSPR/MUJER_A/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/MUJER_A/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/mujer_a/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/mujer_a/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_mujer_a, 2000);
           memcpy(&lanim_spr, &lanim_spr_mujer_a, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_mujer_a;
         } else if(TipoModelo[2]) {
-          strcpy(FicheroMod, "GENSPR/ENANO_A/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/ENANO_A/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/enano_a/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/enano_a/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_enano_a, 2000);
           memcpy(&lanim_spr, &lanim_spr_enano_a, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_enano_a;
         }
       } else {
         if(TipoModelo[0]) {
-          strcpy(FicheroMod, "GENSPR/HOMBRE/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/HOMBRE/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/hombre/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/hombre/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_hombre, 2000);
           memcpy(&lanim_spr, &lanim_spr_hombre, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_hombre;
         } else if(TipoModelo[1]) {
-          strcpy(FicheroMod, "GENSPR/MUJER/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/MUJER/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/mujer/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/mujer/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_mujer, 2000);
           memcpy(&lanim_spr, &lanim_spr_mujer, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_mujer;
         } else if(TipoModelo[2]) {
-          strcpy(FicheroMod, "GENSPR/ENANO/ANIM.O3D");
-          strcpy(FicheroAni, "GENSPR/ENANO/ANIM.A3D");
+          strcpy(FicheroMod, "genspr/enano/ANIM.O3D");
+          strcpy(FicheroAni, "genspr/enano/ANIM.A3D");
           memcpy(anim_spr,   anim_spr_enano, 2000);
           memcpy(&lanim_spr, &lanim_spr_enano, sizeof(struct t_listbox));
           lanim_spr.maximo = anim_total_enano;

@@ -60,9 +60,9 @@ void pinta_segmento_procesos(void);
 
 
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 //      Constants
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 
 #define buffer_grow     16384 // Lo que crece el buffer de ediciขn
 #define buffer_min      2048  // Minimum margin space
@@ -76,15 +76,15 @@ extern word * kb_end;
 extern int ibuf; // A pointer to the queue buffer
 extern int fbuf; // Puntero al buffer, fin de la cola
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 
 extern int numero_error;    // Error number
 extern int linea_error;     // Line error (note, can be num_lines + 1)
 extern int columna_error;   // Error column num
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 //    TPRG Struct
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 
   /*
 
@@ -115,9 +115,9 @@ extern int columna_error;   // Error column num
 
   */
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 //      Variables de ediciขn
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 
 // La ventana es de (an*editor_font_an+12*big2) x (al*editor_font_al+20*big2)
 
@@ -148,16 +148,16 @@ char color_cursor;
 
 int forced_slider=0;    
 
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 //      Variables del coloreador lxico
-//อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
+///////////////////////////////////////////////////////////////////////////////
 
 #define p_ultima        0x00  // Fin de fichero <EOF>
 #define p_rem           0x7f  // Comentario de una linea
 #define p_id            0xfd  // Identificador
-#define p_num           0xfe  // Nฃmero
+#define p_num           0xfe  // N๚mero
 #define p_spc           0x100 // Espacios
-#define p_sym           0x101 // Sกmbolo
+#define p_sym           0x101 // Sํmbolo
 #define p_lit           0x102 // Literal entre comillas
 #define p_res           0x103 // Id reservado
 #define p_pre           0x104 // Id predefinido
@@ -166,7 +166,7 @@ void clexico(void);
 
 extern int cpieza;      // Token leido por clexico()
 extern byte * csource;  // Puntero al source, para compilar el programa
-extern int iscoment;    // Indica si est  dentro de un comentario.
+extern int iscoment;    // Indica si estแ dentro de un comentario.
 
 char colin[1024];       // Buffer para "colorear" las lineas
 
@@ -182,13 +182,20 @@ extern int numrem;
 //อออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออ
 
 void programa1(void) {
-  byte *ptr=v.ptr;
-  int an=v.an,al=v.al;
-  if (big) { an/=2; al/=2; }
+  byte *ptr = v.ptr;
+  int an = v.an,
+      al = v.al;
+
+  if (big) { 
+    an /= 2; 
+    al /= 2;
+  }
 
   _completo();
 
-  if (numero_error!=-1 && eprg==v.prg) error_cursor();
+  if (numero_error!=-1 && eprg==v.prg) {
+    error_cursor();
+  }
 
   wput(ptr,an,al,an-17,10,56);          // Maximizar
   wput(ptr,an,al,an-9,10,39);           // Arriba
@@ -199,19 +206,29 @@ void programa1(void) {
 }
 
 void programa2(void) {
-  static byte bloque=0,bloque_x,bloque_y;
-  int n,m,min,max;
-  int an=v.an,al=v.al;
-  if (big) { an/=2; al/=2; }
+  static byte bloque = 0,
+              bloque_x,
+              bloque_y;
+  int n, m, min, max;
+  int an = v.an,
+      al = v.al;
 
-  if (arrastrar==4) v.volcar=1;
+  if (big) {
+    an /= 2;
+    al /= 2;
+  }
 
-  if (wmouse_x!=-1 && v.estado) {
-    if ((mouse_b&1) && mouse_y>=v.y+18*big2 && mouse_x>=v.x+2*big2) {
-      n=v.prg->primera_linea+(mouse_y-(v.y+18*big2))/editor_font_al;
-      m=v.prg->primera_columna+(mouse_x-(v.x+2*big2))/editor_font_an;
+  if (arrastrar == 4) {
+    v.volcar = 1;
+  }
+
+  if (wmouse_x != -1 && v.estado) {
+    if ((mouse_b & 1) && mouse_y >= v.y + 18 * big2 && mouse_x >= v.x + 2 * big2) {
+      n = v.prg->primera_linea + (mouse_y - (v.y + 18 * big2)) / editor_font_al;
+      m = v.prg->primera_columna + (mouse_x - (v.x + 2 * big2)) / editor_font_an;
       if (n>=v.prg->primera_linea && n<v.prg->primera_linea+v.prg->al &&
           m>=v.prg->primera_columna && m<v.prg->primera_columna+v.prg->an) {
+
         if (!(old_mouse_b&1)) {
           bloque=1; bloque_x=m; bloque_y=n;
         } else {
@@ -219,19 +236,42 @@ void programa2(void) {
             f_desmarcar(); bloque=2; f_marcar();
           }
         }
-        if (n>v.prg->num_lineas) n=v.prg->num_lineas;
-        while (v.prg->linea<n) f_down();
-        while (v.prg->linea>n) f_up();
-        while (v.prg->columna<m) f_right();
-        while (v.prg->columna>m) f_left();
+
+        if (n > v.prg->num_lineas) {
+          n = v.prg->num_lineas;
+        }
+
+        while (v.prg->linea < n) {
+          f_down();
+        }
+        
+        while (v.prg->linea > n) {
+          f_up();
+        }
+        
+        while (v.prg->columna < m) {
+          f_right();
+        }
+
+        while (v.prg->columna > m) {
+          f_left();
+        }
         v.volcar++;
       }
     }
-    if (v.volcar==0) {
-      if (bloque==2) { f_marcar(); v.volcar++; }
-      bloque=0;
+    
+    if (v.volcar == 0) {
+      if (bloque == 2) { 
+        f_marcar(); 
+        v.volcar++; 
+      }
+      bloque = 0;
     }
-    if (mouse_b&2) { f_desmarcar(); v.volcar++; }
+
+    if (mouse_b&2) { 
+      f_desmarcar(); 
+      v.volcar++; 
+    }
   }
 
   if (wmouse_in(an-9,10,9,al-20)) { // Slider vert
@@ -434,10 +474,13 @@ void editor() {
         if (kcol1>kcol2) f_desmarcar();
         f_left();
       } break;
-    case 82: f_cortar_bloque(2);                // shift+insertar
-      f_pegar_bloque(); f_desmarcar();
+    case 82: 
+      f_cortar_bloque(2);                // shift+insertar
+      f_pegar_bloque(); 
+      f_desmarcar();
       scan_code=0; break;
-    case 83: f_cortar_bloque(1);                // shift+suprimir
+    case 83: 
+      f_cortar_bloque(1);                // shift+suprimir
       bloque_edit=0;
       scan_code=0; break;
     case 71:                                    // shift+inicio

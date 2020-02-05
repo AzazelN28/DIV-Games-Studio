@@ -936,12 +936,14 @@ void MapperCreator2(void)
       if (num_bandera > 0) {
         num_bandera--;
       }
+      scan_code = 0;
       break;
 
     case _R:
       if (num_bandera < 999) {
         num_bandera++;
       }
+      scan_code = 0;
       break;
 
     // TODO: Redibujar los valores de altura.
@@ -979,21 +981,25 @@ void MapperCreator2(void)
     case _F3:
     case _U:
       choose_background = 1;
+      scan_code = 0;
       break;
 
     case _F4:
     case _I:
       choose_floor = 1;
+      scan_code = 0;
       break;
 
     case _F5:
     case _O:
       choose_wall = 1;
+      scan_code = 0;
       break;
 
     case _F6:
     case _P:
       choose_ceiling = 1;
+      scan_code = 0;
       break;
 
     // Esto intenta centrar de alguna manera
@@ -1006,9 +1012,8 @@ void MapperCreator2(void)
       break;
   }
   map_draw();
-  scan_code = 0;
 
-  grid_size = (4*big2) / zoom_level;
+  grid_size = (4 * big2) / zoom_level;
 
   if (choose_background) {
 
@@ -1030,18 +1035,18 @@ void MapperCreator2(void)
  
   } else if (choose_floor) {
         
-    if(m3d_edit.fpg_path[0]==0)
+    if (m3d_edit.fpg_path[0]==0)
     {
-      if(comprobar_fichero())
+      if (comprobar_fichero())
       {
-        strcpy((char *)m3d_edit.fpg_name,input);
-        strcpy((char *)m3d_edit.fpg_path,full);
-        M3D_crear_thumbs(&ltexturasbr,1);
+        strcpy((char *)m3d_edit.fpg_name, input);
+        strcpy((char *)m3d_edit.fpg_path, full);
+        M3D_crear_thumbs(&ltexturasbr, 1);
       }
     } else {
       TipoTex = SUELO;
       dialogo(MapperBrowseFPG0);
-      if(edit_region != -1) {
+      if (edit_region != -1) {
         my_map->regions[edit_region]->floor_tex=Tex[SUELO].cod;
       }
       need_refresh=1;
@@ -1051,19 +1056,19 @@ void MapperCreator2(void)
   } else if (choose_wall) {
    
     fprintf(stdout, "Choosing wall\n");
-    if(m3d_edit.fpg_path[0]==0)
+    if (m3d_edit.fpg_path[0]==0)
     {
       fprintf(stdout, "if(m3d_edit.fpg_path[0]==0)\n");
-      if(comprobar_fichero())
+      if (comprobar_fichero())
       {
-        strcpy((char *)m3d_edit.fpg_name,input);
-        strcpy((char *)m3d_edit.fpg_path,full);
-        M3D_crear_thumbs(&ltexturasbr,1);
+        strcpy((char *)m3d_edit.fpg_name, input);
+        strcpy((char *)m3d_edit.fpg_path, full);
+        M3D_crear_thumbs(&ltexturasbr, 1);
       }
     } else {
       TipoTex = PARED;
       dialogo(MapperBrowseFPG0);
-      if(edit_wall != -1) {
+      if (edit_wall != -1) {
         my_map->walls[edit_wall]->texture=Tex[PARED].cod;
       }
       need_refresh=1;
@@ -1072,18 +1077,18 @@ void MapperCreator2(void)
 
   } else if (choose_ceiling) {
 
-    if(m3d_edit.fpg_path[0]==0)
+    if (m3d_edit.fpg_path[0]==0)
     {
-      if(comprobar_fichero())
+      if (comprobar_fichero())
       {
-        strcpy((char *)m3d_edit.fpg_name,input);
-        strcpy((char *)m3d_edit.fpg_path,full);
-        M3D_crear_thumbs(&ltexturasbr,1);
+        strcpy((char *)m3d_edit.fpg_name, input);
+        strcpy((char *)m3d_edit.fpg_path, full);
+        M3D_crear_thumbs(&ltexturasbr, 1);
       }
     } else {
       TipoTex = TECHO;
       dialogo(MapperBrowseFPG0);
-      if(edit_region != -1) {
+      if (edit_region != -1) {
         my_map->regions[edit_region]->ceil_tex=Tex[TECHO].cod;
       }
       need_refresh=1;
@@ -1104,7 +1109,7 @@ void MapperCreator2(void)
       map_draw(); 
     }
 
-    if(key(_RIGHT)) { 
+    if (key(_RIGHT)) { 
       //scroll_x += (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level; 
       if (key(_L_SHIFT) || key(_R_SHIFT)) 
         scroll_x += 2;
@@ -1113,7 +1118,7 @@ void MapperCreator2(void)
       map_draw(); 
     }
 
-    if(key(_UP)) { 
+    if (key(_UP)) { 
       //scroll_y -= (M3D_DEFAULT_SCROLL_MOVEMENT * big2) / zoom_level; 
       if (key(_L_SHIFT) || key(_R_SHIFT)) 
         scroll_y -= 2;
@@ -1175,23 +1180,23 @@ void MapperCreator2(void)
           //set_mouse(mouse_x, mouse_y);
         }
         if (!leer_mouse) {
-          mouse_graf=17;
+          mouse_graf = 17;
           read_mouse();
-          scroll_x+=((mouse_x-last_x)*big2)/zoom_level;
-          scroll_y+=((mouse_y-last_y)*big2)/zoom_level;
-          mouse_x=last_x;
-          mouse_y=last_y;
-          set_mouse(last_x,last_y);
+          scroll_x += ((mouse_x-last_x)*big2)/zoom_level;
+          scroll_y += ((mouse_y-last_y)*big2)/zoom_level;
+          mouse_x = last_x;
+          mouse_y = last_y;
+          set_mouse(last_x, last_y);
         } else {
-          leer_mouse=0;
-          last_x=mouse_x;
-          last_y=mouse_y;
+          leer_mouse = 0;
+          last_x = mouse_x;
+          last_y = mouse_y;
         }
 
-        if (scroll_x < 0) scroll_x=0;
-        if (scroll_y < 0) scroll_y=0;
-        if (scroll_x > FIN_GRID) scroll_x=FIN_GRID;
-        if (scroll_y > FIN_GRID) scroll_y=FIN_GRID;
+        if (scroll_x < 0) scroll_x = 0;
+        if (scroll_y < 0) scroll_y = 0;
+        if (scroll_x > FIN_GRID) scroll_x = FIN_GRID;
+        if (scroll_y > FIN_GRID) scroll_y = FIN_GRID;
 
       } else {
         leer_mouse = 1;
@@ -1293,26 +1298,26 @@ void MapperBrowseFPG0(void)
   v.paint_handler=MapperBrowseFPG1;
   v.click_handler=MapperBrowseFPG2;
 
-  if(modo<100) {
-    if(TipoBrowser==MAPBR) {
+  if (modo < 100) {
+    if(TipoBrowser == MAPBR) {
       memcpy(&copia_br, &ltexturasbr, sizeof(ltexturasbr));
       memcpy(&ltexturasbr, &lthumbmapbr, sizeof(ltexturasbr));
-      ltexturasbr.maximo=m_maximo;
+      ltexturasbr.maximo = m_maximo;
     } else {
       memcpy(m3d_fpgcodesbr, fondo, max_texturas*an_textura);
-      ltexturasbr.maximo=f_maximo;
+      ltexturasbr.maximo = f_maximo;
     }
   } else {
     if(TipoTex==FONDO) {
       memcpy(m3d_fpgcodesbr, fondo, max_texturas*an_textura);
-      ltexturasbr.maximo=f_maximo;
+      ltexturasbr.maximo = f_maximo;
     } else {
       memcpy(m3d_fpgcodesbr, textura, max_texturas*an_textura);
-      ltexturasbr.maximo=t_maximo;
+      ltexturasbr.maximo = t_maximo;
     }
   }
 
-  num=0;
+  num = 0;
 
   ltexturasbr.creada   = 0;
   ltexturasbr.columnas = 4;
@@ -1320,7 +1325,8 @@ void MapperBrowseFPG0(void)
   ltexturasbr.al       = 32;
   ltexturasbr.lineas   = 4;
 
-  v_terminado=0; t_pulsada=1;
+  v_terminado = 0;
+  t_pulsada = 1;
 }
 
 void MapperBrowseFPG1(void)
@@ -1333,7 +1339,9 @@ void MapperBrowseFPG1(void)
 void MapperBrowseFPG2(void) {
   int old_pincel;
 
-  if (!key(_T) && !key(_U)) t_pulsada=0;
+  if (!key(_T) && !key(_U)) {
+    t_pulsada = 0;
+  }
 
   _process_items();
 

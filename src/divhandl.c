@@ -348,55 +348,98 @@ void menu_edicion2(void) {
     switch (v.estado) {
 
       case 1: // Delete line
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_delete();
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n); 
+          vuelca_ventana(n);
+        }
+        break;
 
       case 2: // Mark
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_marcar();
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n); 
+          vuelca_ventana(n);
+        }
+        break;
 
       case 3: // Unmark
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_desmarcar();
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n); 
+          vuelca_ventana(n);
+        } 
+        break;
 
       case 4: // Cut
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_cortar_bloque(1);
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n); 
+          vuelca_ventana(n);
+        } 
+        break;
 
       case 5: // Copy
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_cortar_bloque(0);
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n);
+          vuelca_ventana(n);
+        } 
+        break;
 
       case 6: // Paste
-        if (n=determina_prg()) { wup(n);
+        if (n=determina_prg()) { 
+          wup(n);
           f_pegar_bloque();
           f_desmarcar();
-          _completo(); v.volcar=2; wdown(n); vuelca_ventana(n);
-        } break;
+          _completo(); 
+          v.volcar=2; 
+          wdown(n); 
+          vuelca_ventana(n);
+        } 
+        break;
 
       case 7:
         if (n=determina_prg()) {
-          wmouse_x=-1; wmouse_y=-1; mouse_b=0; call(v.click_handler);
-          if (v.volcar) { vuelca_ventana(0); v.volcar=0; }
+          wmouse_x = -1; 
+          wmouse_y = -1;
+          mouse_b=0; 
+          call(v.click_handler);
+          if (v.volcar) { 
+            vuelca_ventana(0); 
+            v.volcar=0; 
+          }
           move(0,n);
           if (v.primer_plano==0) {
-            for (m=1;m<max_windows;m++) if (ventana[m].tipo && ventana[m].primer_plano==1)
-              if (colisionan(0,m)) { ventana[m].primer_plano=0; vuelca_ventana(m); }
+            for (m=1;m<max_windows;m++) {
+              if (ventana[m].tipo && ventana[m].primer_plano==1) {
+                if (colisionan(0,m)) { 
+                  ventana[m].primer_plano=0; 
+                  vuelca_ventana(m); 
+                }
+              }
+            }
             v.primer_plano=1;
           } vuelca_ventana(0);
           write_line(); read_line();
           dialogo(lista_procesos0);
-          scan_code=0; ascii=0;
+          scan_code=0; 
+          ascii=0;
           if (v_aceptar) {
             f_bop(); f_inicio();
             while (v.prg->linea>lp1[lp_select]) {
@@ -499,17 +542,23 @@ extern char input2[32];
 
 void browser0(void);
 
-void menu_mapas0(void) { crear_menu(800);
+void menu_mapas0(void) { 
+  crear_menu(800);
   v.paint_handler=menu_mapas1;
   v.click_handler=menu_mapas2; }
 
-void menu_mapas1(void) { pinta_menu(800); }
+void menu_mapas1(void) { 
+  pinta_menu(800); 
+}
 
 void menu_mapas2(void) {
   int n,m;
 
-  if (determina_map()) actualiza_menu(800,1,0);
-  else actualiza_menu(800,3,9);
+  if (determina_map()) {
+    actualiza_menu(800,1,0);
+  } else {
+    actualiza_menu(800,3,9);
+  }
 
   if ((old_mouse_b&1) && !(mouse_b&1)) {
 
@@ -520,9 +569,12 @@ void menu_mapas2(void) {
       case 1: // Nuevo mapa ...
         dialogo(nuevo_mapa0);
         if (v_terminado) {
-          mouse_graf=3; volcado_copia(); mouse_graf=1;
+          mouse_graf=3; 
+          volcado_copia(); 
+          mouse_graf=1;
           nuevo_mapa(NULL);
-        } break;
+        } 
+        break;
 
       case 2: // Abrir mapa ...
         v_modo=0; v_texto=(char *)texto[803];
@@ -2655,28 +2707,51 @@ void analizar_input(void) {
 
 #define y_nm 67
 char mapsizes[9*9]="320x200\0 320x240\0 360x240\0 360x360\0 376x282\0 640x400\0 640x480\0 800x600\0 1024x768";
-struct t_listbox lmapsizes={64,19,mapsizes,9,5,50};
-char mancho[8],malto[8];
 
+// Inicializamos la estructura del listbox.
+struct t_listbox lmapsizes={ 64, 19, mapsizes, 9, 5, 50};
+
+// ¿Cadenas que guardan el tamaño del mapa?
+char mancho[8], malto[8];
+
+/**
+ * Mostramos una pantalla con tamaños de mapa y lista
+ * para poder introducir los tamaños necesarios para
+ * crear un mapa nuevo.
+ */
 void nuevo_mapa0(void) {
-  v.tipo=1; v.titulo=texto[132];
-  v.an=126; v.al=14+y_nm;
+  
+  v.tipo=1; 
+  v.titulo=texto[132];
+  v.an=126; 
+  v.al=14+y_nm;
   v.paint_handler=nuevo_mapa1;
   v.click_handler=nuevo_mapa2;
-  lmapsizes.creada=0; lmapsizes.maximo=9;
-  map_an=vga_an; map_al=vga_al;
-  itoa(map_an,mancho,10); itoa(map_al,malto,10);
-  _get(133,4,12,v.an-72,(byte *)mancho,8,1,32767);
-  _get(134,4,34,v.an-72,(byte *)malto,8,1,32767);
+
+  lmapsizes.creada = 0;
+  lmapsizes.maximo = 9;
+  
+  map_an=vga_an;
+  map_al=vga_al;
+  
+  itoa(map_an, mancho, 10); 
+  itoa(map_al, malto, 10);
+  _get(133, 4, 12, v.an-72, (byte *)mancho, 8, 1, 32767);
+  _get(134, 4, 34, v.an-72, (byte *)malto, 8, 1, 32767);
   _button(100,7,y_nm,0);
   _button(101,v.an-8,y_nm,2);
-  v_terminado=0;
+
+  v_terminado = 0;
 }
 
 void nuevo_mapa1(void) {
-  int an=v.an/big2,al=v.al/big2;
+  int an = v.an / big2,
+      al = v.al / big2;
+
   _show_items();
+
   wwrite(v.ptr,an,al,64,12,0,texto[135],c3);
+
   crear_listbox(&lmapsizes);
 }
 

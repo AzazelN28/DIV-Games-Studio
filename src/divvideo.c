@@ -186,7 +186,6 @@ void svmode(void) {
 SDL_initFramerate(&fpsman);
 SDL_setFramerate(&fpsman, 60);
 
- 
   fprintf(stdout,"full screen: %d\n",fsmode);
 
 #ifdef GCW_SOFTSTRETCH
